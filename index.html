@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Sumbai Crew</title>
+  <!-- หน้า LIFF ของพนักงาน (เปิดจากเมนูใน LINE) — ค่าตั้งค่าอยู่ใน config.js -->
+  <script src="config.js"></script>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  /*
+   * ฟอนต์ของ SUMBAI
+   * - ข้อความทั้งหมด: Sukhumvit Set (มีในเครื่อง iPhone / iPad / Mac อยู่แล้ว)
+   *   เครื่อง Android / Windows ที่ไม่มีฟอนต์นี้ จะใช้ Sarabun แทนอัตโนมัติ
+   * - ชื่อร้าน: JA Jayagiri Sans
+   *   ตอนนี้ใช้ได้เฉพาะเครื่องที่ติดตั้งฟอนต์นี้ไว้
+   *   ถ้าต้องการให้ทุกเครื่องเห็น: ส่งไฟล์ฟอนต์ (.ttf/.otf) ให้ Claude
+   *   เพื่อตัดเฉพาะตัวอักษรชื่อร้านแล้วฝังไว้ในบรรทัด BRAND-FONT-DATA ด้านล่าง
+   */
+  @font-face {
+    font-family: 'SB Brand';
+    src: local('JA Jayagiri Sans'), local('JAJayagiriSans'), local('JA Jayagiri Sans Regular'), local('JAJayagiriSans-Regular')
+      /* BRAND-FONT-DATA */;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'SB Text';
+    src: local('Sukhumvit Set'), local('SukhumvitSet-Text'), local('Sukhumvit Set Text');
+    font-weight: 400;
+  }
+  @font-face {
+    font-family: 'SB Text';
+    src: local('Sukhumvit Set Medium'), local('SukhumvitSet-Medium'), local('Sukhumvit Set');
+    font-weight: 500;
+  }
+  @font-face {
+    font-family: 'SB Text';
+    src: local('Sukhumvit Set SemiBold'), local('SukhumvitSet-SemiBold'), local('Sukhumvit Set Bold');
+    font-weight: 600;
+  }
+  @font-face {
+    font-family: 'SB Text';
+    src: local('Sukhumvit Set Bold'), local('SukhumvitSet-Bold');
+    font-weight: 700;
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --olive: #536238; --olive-2: #7A8758; --olive-3: #3E4A28; --sage: #C9CFB0; --cream: #FBF7EE; --cream-2: #EFEBDC; --line: #DFDBC8;
+    --ink: #2A2F1C; --muted: #6D7157; --ok: #2f7d4a; --warn: #b7791f; --bad: #b3261e; --info: #2c5d8a;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--cream); color: var(--ink);
+    font-family: 'SB Text', 'Sukhumvit Set', 'Sarabun', system-ui, -apple-system, sans-serif; font-size: 16px; line-height: 1.45; }
+  .brand { font-family: 'SB Brand', 'JA Jayagiri Sans', 'SB Text', 'Sukhumvit Set', 'Sarabun', sans-serif; font-weight: 400; letter-spacing: 1px; }
+  button, input, select, textarea { font-family: inherit; font-size: 16px; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 16px 16px 90px; }
+  .wrap.wide { max-width: 1200px; }
+  header.top { background: var(--olive); color: var(--cream); padding: 14px 16px; position: sticky; top: 0; z-index: 10; }
+  header.top .in { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  header.top b { font-size: 20px; letter-spacing: .5px; }
+  header.top .brand { font-size: 24px; }
+  header.top small { opacity: .8; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin: 12px 0; }
+  .card h3 { margin: 0 0 10px; font-size: 17px; color: var(--olive); }
+  .muted { color: var(--muted); font-size: 14px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .row > * { flex: 1 1 140px; }
+  label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px; }
+  input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); }
+  textarea { min-height: 70px; resize: vertical; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border-radius: 10px; border: 1px solid var(--olive);
+    background: var(--olive); color: var(--cream); font-weight: 600; cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--olive); }
+  .btn.sm { padding: 6px 10px; font-size: 14px; }
+  .btn.ok { background: var(--ok); border-color: var(--ok); }
+  .btn.bad { background: var(--bad); border-color: var(--bad); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .big { width: 100%; padding: 22px; font-size: 22px; border-radius: 16px; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--cream-2); color: var(--olive); }
+  .pill.ok { background: #e3f1e7; color: var(--ok); } .pill.warn { background: #fbf0dc; color: var(--warn); }
+  .pill.bad { background: #f8e1df; color: var(--bad); } .pill.info { background: #e1ecf6; color: var(--info); }
+  .tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); margin: 8px 0 4px; }
+  .tabs button { background: none; border: none; padding: 10px 12px; color: var(--muted); font-weight: 600; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; }
+  .tabs button.on { color: var(--olive); border-bottom-color: var(--olive); }
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--line); display: flex; z-index: 20; }
+  .bottom-nav button { flex: 1; background: none; border: none; padding: 10px 4px 12px; color: var(--muted); font-weight: 600; font-size: 14px; }
+  .bottom-nav button.on { color: var(--olive); }
+  .bottom-nav i { display: block; font-style: normal; font-size: 20px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: var(--cream-2); color: var(--olive); font-weight: 600; position: sticky; top: 0; }
+  .tscroll { overflow: auto; max-height: 70vh; border: 1px solid var(--line); border-radius: 10px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+  .stat { background: var(--cream-2); border-radius: 12px; padding: 10px 12px; }
+  .stat b { display: block; font-size: 22px; color: var(--olive); }
+  .stat span { font-size: 13px; color: var(--muted); }
+  .toast { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 12px 18px;
+    border-radius: 12px; z-index: 99; max-width: 90vw; box-shadow: 0 6px 24px rgba(0,0,0,.2); display: none; }
+  .toast.bad { background: var(--bad); } .toast.ok { background: var(--ok); }
+  .loading { position: fixed; inset: 0; background: rgba(251,247,238,.75); display: none; align-items: center; justify-content: center; z-index: 98; font-weight: 600; color: var(--olive); }
+  .clock { font-size: 44px; font-weight: 700; color: var(--olive); letter-spacing: 1px; text-align: center; }
+  .center { text-align: center; }
+  /* ภาพร้าน (img/) — ใช้เป็นภาพประกอบ ไม่บังข้อมูล */
+  .hero { height: 150px; border-radius: var(--radius); background: var(--cream-2) center/cover no-repeat; margin: 12px 0; }
+  .hero.sign { background-image: url('photo-sign.jpg'); background-position: center 45%; }
+  .hero.shower { background-image: url('photo-shower.jpg'); height: 120px; }
+  .hero.pool { background-image: url('photo-pool.jpg'); height: 120px; margin: -16px -16px 14px; border-radius: var(--radius) var(--radius) 0 0; }
+  .photo-card { position: relative; overflow: hidden; border: none; color: var(--cream); background: var(--olive) center/cover no-repeat; min-height: 200px;
+    display: flex; flex-direction: column; justify-content: flex-end; }
+  .photo-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(42,47,28,.05) 0%, rgba(42,47,28,.35) 40%, rgba(42,47,28,.82) 100%); }
+  .photo-card > * { position: relative; }
+  .photo-card .muted, .photo-card h3, .photo-card a.muted { color: var(--cream); }
+  .photo-card .muted { opacity: .9; }
+  .photo-card .bigtime { color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,.25); }
+  .photo-card .btn { background: var(--cream); color: var(--olive-3); border-color: var(--cream); }
+  .photo-card.tubs { background-image: url('photo-tubs.jpg'); }
+  .photo-card.sauna { background-image: url('photo-sauna.jpg'); }
+  .photo-card.pool { background-image: url('photo-pool.jpg'); background-position: center 70%; min-height: 170px; }
+  .hide { display: none !important; }
+  .notice { background: #fbf0dc; border: 1px solid #efd9a8; color: #7a5410; border-radius: 12px; padding: 12px; margin: 10px 0; }
+  .c-OK { background: #e3f1e7; } .c-LATE { background: #fbf0dc; } .c-ABS { background: #f8e1df; } .c-OFF { background: #f1efe8; color: #aaa; }
+  .c-OFFW { background: #e1ecf6; } .c-VAC, .c-PER, .c-SICK, .c-COMP { background: #efe6f7; } .c-WAIT { background: #fff; } .c-NA, .c-FUT { background: #fff; color: #bbb; }
+</style>
+
+  <style>
+    .cam { position: relative; width: 100%; aspect-ratio: 3 / 4; max-height: 60vh; background: #111; border-radius: 16px; overflow: hidden; }
+    .cam video, .cam img { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: block; }
+    .cam img.noflip { transform: none; }
+    .cam .hint { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; color: #fff; font-size: 14px; text-shadow: 0 1px 3px #000; }
+    .step { display: flex; gap: 10px; align-items: center; padding: 8px 0; }
+    .step .dot { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; font-weight: 700; background: var(--cream-2); color: var(--olive); flex: none; }
+    .step.ok .dot { background: #e3f1e7; color: var(--ok); } .step.bad .dot { background: #f8e1df; color: var(--bad); }
+    .consent { overflow: auto; background: var(--cream-2); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+    .consent h4 { margin: 8px 0 4px; color: var(--olive); }
+    .consent ul { margin: 4px 0; padding-left: 20px; }
+    .consent p { margin: 0 0 8px; }
+    .consent.full { max-height: none; }
+    .pdpa-modal { position: fixed; inset: 0; z-index: 60; background: rgba(42, 47, 28, .55); display: flex; align-items: flex-end; justify-content: center; }
+    .pdpa-box { background: var(--cream); width: 100%; max-width: 560px; max-height: 88vh; overflow: auto; border-radius: 16px 16px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
+    .bigtime { font-size: 40px; font-weight: 700; color: var(--olive); text-align: center; letter-spacing: 1px; }
+    .perf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .bar { height: 8px; background: var(--cream-2); border-radius: 99px; overflow: hidden; } .bar i { display: block; height: 100%; background: var(--olive); }
+    .subtabs { display: flex; gap: 6px; overflow-x: auto; margin: 4px 0 8px; }
+    .subtabs button { border: 1px solid var(--line); background: #fff; color: var(--muted); border-radius: 99px; padding: 6px 12px; font-weight: 600; white-space: nowrap; }
+    .subtabs button.on { background: var(--olive); color: var(--cream); border-color: var(--olive); }
+    .money { text-align: right; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  <header class="top"><div class="in"><b class="brand">sumbai</b><small id="hdr"></small></div></header>
+  <div class="loading" id="loading" style="display:flex">กำลังเปิด…</div>
+  <div class="toast" id="toast"></div>
+
+  <div class="wrap">
+    <!-- ข้อความเต็มหน้าจอ (ผิดพลาด / รออนุมัติ / สำเร็จ) -->
+    <section id="vMsg" class="hide"><div class="card center"><div class="hero pool"></div><div id="msgIcon" style="font-size:48px"></div><h3 id="msgTitle"></h3><p id="msgBody" class="muted"></p><div id="msgBtns" class="row"></div></div></section>
+
+    <!-- ลงทะเบียน -->
+    <section id="vReg" class="hide">
+      <div class="hero sign" role="img" aria-label="ป้ายร้าน sumbai"></div>
+      <div class="card">
+        <h3 id="regTitle">ลงทะเบียนพนักงาน</h3>
+        <p class="muted" id="regSub">ทำครั้งเดียว ใช้รหัสพนักงานที่ได้รับจากผู้ดูแล</p>
+        <div id="regFields">
+          <label for="rCode">รหัสพนักงาน</label><input id="rCode" autocapitalize="characters" placeholder="เช่น E001">
+          <label for="rName">ชื่อจริง หรือชื่อเล่น</label><input id="rName" placeholder="เช่น สมชาย">
+        </div>
+        <span id="pdpaVer" hidden></span>
+        <div class="consent" id="consentText"></div>
+        <label style="display:flex;gap:10px;align-items:flex-start;color:var(--ink);margin:12px 0">
+          <input type="checkbox" id="rConsent" style="width:22px;height:22px;flex:none;margin-top:2px">
+          <span>ข้าพเจ้าได้อ่านและรับทราบประกาศความเป็นส่วนตัวสำหรับพนักงานแล้ว</span>
+        </label>
+        <button class="btn big" id="btnReg" onclick="doRegister()">รับทราบและลงทะเบียน</button>
+        <p class="center" style="margin:14px 0 0"><a href="#" onclick="toggleAdminReg();return false" class="muted">ฉันเป็นผู้ดูแล</a></p>
+        <div id="admReg" class="hide">
+          <label for="rPass">รหัสผู้ดูแล</label><input id="rPass" type="password">
+          <div style="height:8px"></div><button class="btn ghost" onclick="doRegisterAdmin()">ลงทะเบียน LINE นี้เป็นผู้ดูแล</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ลงเวลา -->
+    <section id="vClock" class="hide">
+      <div class="card center photo-card tubs" id="ckCard">
+        <div class="muted" id="ckDate"></div>
+        <div class="bigtime" id="ckClock">--:--</div>
+        <h3 id="ckTitle" style="margin:4px 0 0"></h3>
+        <div class="muted" id="ckToday"></div>
+      </div>
+      <div class="card">
+        <div class="step" id="stGps"><span class="dot">1</span><div><b>ตำแหน่ง</b><div class="muted" id="gpsTxt">กำลังหาตำแหน่ง…</div></div></div>
+        <div class="step" id="stCam"><span class="dot">2</span><div><b>ถ่ายรูปหน้าตัวเอง</b><div class="muted" id="camTxt">รอเปิดกล้อง…</div></div></div>
+        <div class="cam" id="camBox"><video id="video" playsinline muted autoplay></video><img id="shot" class="hide" alt="รูปที่ถ่าย"><div class="hint" id="camHint"></div></div>
+        <input type="file" id="fileCam" accept="image/*" capture="user" class="hide">
+        <div style="height:12px"></div>
+        <button class="btn big" id="btnShot" onclick="takeShot()" disabled>📸 ถ่ายรูป</button>
+        <div class="row hide" id="afterShot" style="margin-top:10px">
+          <button class="btn ghost" onclick="retake()">ถ่ายใหม่</button>
+          <button class="btn ok" id="btnSubmit" onclick="submitClock()">ยืนยันลงเวลา</button>
+        </div>
+        <p class="muted" id="ckNote" style="margin:10px 0 0"></p>
+      </div>
+    </section>
+
+    <!-- ลางาน -->
+    <section id="vLeave" class="hide">
+      <div class="hero shower" role="img" aria-label="มุมฝักบัวในสวน"></div>
+      <div class="card">
+        <h3>วันลาคงเหลือปีนี้</h3>
+        <div class="grid" id="balGrid"></div>
+        <p class="muted" id="probLbl" style="margin:8px 0 0"></p>
+      </div>
+      <div class="card">
+        <h3>ขอลา</h3>
+        <label for="lvType">ประเภทการลา</label>
+        <select id="lvType"><option value="PER">ลากิจ</option><option value="SICK">ลาป่วย</option><option value="VAC">ลาพักร้อน</option><option value="COMP">ใช้วันหยุดชดเชย (นักขัตฤกษ์)</option></select>
+        <div class="row">
+          <div><label for="lvFrom">ตั้งแต่วันที่</label><input type="date" id="lvFrom"></div>
+          <div><label for="lvTo">ถึงวันที่</label><input type="date" id="lvTo"></div>
+        </div>
+        <label for="lvReason">เหตุผล</label><textarea id="lvReason" maxlength="300"></textarea>
+        <p class="muted" id="lvHint"></p>
+        <button class="btn big" onclick="doLeave()">ส่งคำขอลา</button>
+      </div>
+      <div class="card"><h3>วันหยุดชดเชยที่ใช้ได้</h3><div id="compList" class="muted">—</div></div>
+      <div class="card"><h3>คำขอลาของฉัน</h3><div id="myLeaves"></div></div>
+    </section>
+
+    <!-- ข้อมูลของฉัน -->
+    <section id="vMe" class="hide">
+      <div class="card photo-card pool">
+        <div class="row" style="align-items:center"><div><b id="meName"></b><div class="muted" id="meSub"></div><a href="#" class="muted" style="font-size:13px" onclick="showPdpaFull();return false">ประกาศความเป็นส่วนตัว</a></div>
+          <div style="flex:0 0 auto" id="adminBtn" class="hide"><a class="btn sm" href="admin.html">⚙️ ผู้ดูแล</a></div></div>
+      </div>
+      <div class="subtabs" id="meTabs">
+        <button data-t="hist" class="on">ประวัติ</button><button data-t="perf">ผลงาน</button><button data-t="pay">เงินเดือน</button>
+        <button data-t="docs">เอกสาร</button><button data-t="note">หมายเหตุ</button>
+      </div>
+      <div id="tHist" class="mt"><div class="card"><div class="tscroll"><table><thead><tr><th>วันที่</th><th>สถานะ</th><th>เข้า</th><th>ออก</th></tr></thead><tbody id="histBody"></tbody></table></div></div></div>
+      <div id="tPerf" class="mt hide"><div id="perfBox"></div></div>
+      <div id="tPay" class="mt hide"><div class="card"><h3>เงินเดือน (งวดที่ปิดแล้ว)</h3><div id="payList"></div></div><div class="card hide" id="payDetail"></div></div>
+      <div id="tDocs" class="mt hide">
+        <div class="card">
+          <h3>ขอเอกสาร</h3>
+          <div class="grid" style="grid-template-columns:1fr">
+            <button class="btn ghost" style="justify-content:flex-start" onclick="pickDoc('PAYSLIP')">🧾 ขอสลิปเงินเดือน (PDF)</button>
+            <button class="btn ghost" style="justify-content:flex-start" onclick="pickDoc('EMPLOY_CERT')">📄 ขอใบรับรองการทำงาน</button>
+            <button class="btn ghost" style="justify-content:flex-start" onclick="pickDoc('SALARY_CERT')">💼 ขอใบรับรองเงินเดือน</button>
+          </div>
+          <div id="docForm" class="hide">
+            <h3 id="docTitle" style="margin-top:14px"></h3>
+            <div id="docMonthBox"><label for="docMonth">สลิปเดือน</label><input type="month" id="docMonth"></div>
+            <label for="docPurpose">ใช้เพื่อ (ถ้ามี)</label><input id="docPurpose" maxlength="300" placeholder="เช่น ยื่นขอสินเชื่อ / ขอวีซ่า">
+            <div style="height:10px"></div><button class="btn big" onclick="doDoc()">ส่งคำขอ</button>
+          </div>
+        </div>
+        <div class="card"><h3>คำขอเอกสารของฉัน</h3><div id="myDocs"></div></div>
+      </div>
+      <div id="tNote" class="mt hide">
+        <div class="card">
+          <h3>บันทึกหมายเหตุ</h3>
+          <label for="ntDate">วันที่ทำงาน</label><input type="date" id="ntDate">
+          <label for="ntText">รายละเอียด</label><textarea id="ntText" maxlength="500" placeholder="เช่น อยู่ปิดร้านช้าเพราะมีลูกค้ากรุ๊ป"></textarea>
+          <p class="muted">ชั่วโมง OT ระบบคิดจากเวลาที่กด "ลงเวลาออกงาน" · บันทึกย้อนหลังได้ 7 วัน</p>
+          <button class="btn" onclick="doNote()">บันทึก</button>
+        </div>
+        <div class="card"><h3>หมายเหตุและ OT ของฉัน</h3><div id="myNotes"></div></div>
+      </div>
+    </section>
+  </div>
+
+  <nav class="bottom-nav hide" id="nav">
+    <button data-v="clockin" onclick="go('clock','in')"><i>🟢</i>เข้างาน</button>
+    <button data-v="clockout" onclick="go('clock','out')"><i>🔴</i>ออกงาน</button>
+    <button data-v="leave" onclick="go('leave')"><i>🗓</i>ลางาน</button>
+    <button data-v="me" onclick="go('me')"><i>👤</i>ของฉัน</button>
+  </nav>
+
+<script>
+  /* =========================================================
+   * ตั้งค่า / ตัวช่วย
+   * ========================================================= */
+  const CFG = window.SUMBAI_CONFIG || {};
+  /* ประกาศความเป็นส่วนตัว (PDPA) — ข้อความจากเจ้าของกิจการ
+   * __VER__ __EFF__ __EMAIL__ __PHONE__ __PHOTO_DAYS__ เติมจากชีต Config ตอนแสดงผล */
+  const PDPA_SHORT = `
+    <h4 style="margin-top:0">ประกาศความเป็นส่วนตัวสำหรับพนักงาน (PDPA)</h4>
+    <p class="muted" style="margin:0 0 8px">ฉบับ __VER__</p>
+    <p>บริษัท ซำบายดีบ่ จำกัด (SUMBAI) เก็บรวบรวมและใช้ข้อมูลส่วนบุคคลของท่านเพื่อการลงทะเบียน การบริหารจัดการพนักงาน การใช้งานระบบ และการบันทึกเวลาทำงาน ตามรายละเอียดในประกาศความเป็นส่วนตัวสำหรับพนักงานฉบับเต็ม</p>
+    <p>ข้อมูลที่บริษัทอาจเก็บรวบรวม ได้แก่ ชื่อ–นามสกุล ข้อมูลติดต่อ รูปถ่ายพนักงานและรูปถ่ายขณะลงเวลา ข้อมูลเกี่ยวกับการทำงาน ข้อมูลการลงเวลาทำงาน ตำแหน่งที่ตั้ง (GPS) ขณะลงเวลา LINE User ID และข้อมูลทางเทคนิคที่จำเป็นต่อการใช้งานและรักษาความปลอดภัยของระบบ</p>
+    <p>บริษัทจะเก็บรักษาและใช้ข้อมูลเท่าที่จำเป็นตามวัตถุประสงค์ที่เกี่ยวข้อง และดำเนินมาตรการที่เหมาะสมเพื่อรักษาความมั่นคงปลอดภัยของข้อมูลส่วนบุคคล</p>
+    <p style="margin-bottom:0"><a href="#" onclick="showPdpaFull();return false"><b>อ่านประกาศความเป็นส่วนตัวฉบับเต็ม ›</b></a></p>`;
+  const PDPA_FULL = `
+    <h3 style="margin:0">ประกาศความเป็นส่วนตัวสำหรับพนักงาน</h3>
+    <p class="muted" style="margin:2px 0 10px">(Employee Privacy Notice)<br>บริษัท ซำบายดีบ่ จำกัด (SUMBAI) · ฉบับที่ __VER__</p>
+    <p>บริษัท ซำบายดีบ่ จำกัด (“บริษัท”) ในฐานะผู้ควบคุมข้อมูลส่วนบุคคล ให้ความสำคัญกับการคุ้มครองข้อมูลส่วนบุคคลของพนักงาน และจัดทำประกาศความเป็นส่วนตัวฉบับนี้ขึ้นเพื่อแจ้งให้พนักงานทราบเกี่ยวกับการเก็บรวบรวม ใช้ หรือเปิดเผยข้อมูลส่วนบุคคล ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 และกฎหมายที่เกี่ยวข้อง</p>
+    <p>ประกาศฉบับนี้ครอบคลุมการประมวลผลข้อมูลส่วนบุคคลที่เกี่ยวข้องกับการลงทะเบียน การใช้งานระบบพนักงาน การลงเวลาทำงาน และการบริหารจัดการพนักงานของบริษัท</p>
+    <h4>1. ข้อมูลส่วนบุคคลที่บริษัทเก็บรวบรวม</h4>
+    <p>บริษัทอาจเก็บรวบรวมข้อมูลส่วนบุคคลของพนักงานเท่าที่จำเป็น ได้แก่</p>
+    <ul>
+      <li>ข้อมูลระบุตัวบุคคล เช่น ชื่อ นามสกุล ชื่อเล่น รหัสหรือหมายเลขประจำตัวพนักงาน และรูปถ่ายพนักงาน</li>
+      <li>ข้อมูลติดต่อ เช่น หมายเลขโทรศัพท์ อีเมล และช่องทางติดต่อที่พนักงานแจ้งไว้กับบริษัท</li>
+      <li>ข้อมูลเกี่ยวกับการทำงาน เช่น ตำแหน่งงาน วันที่เริ่มงาน สถานะการทำงาน หน่วยงาน หน้าที่รับผิดชอบ และข้อมูลอื่นที่เกี่ยวข้องกับการจ้างงาน</li>
+      <li>ข้อมูลการลงเวลาทำงาน เช่น วันที่และเวลาเข้า–ออกงาน ประวัติการลงเวลา รูปถ่ายที่ถ่ายขณะลงเวลา และข้อมูลที่เกี่ยวข้องกับการตรวจสอบการปฏิบัติงาน</li>
+      <li>ข้อมูลตำแหน่งที่ตั้ง เช่น พิกัด GPS ของอุปกรณ์ ณ เวลาที่พนักงานดำเนินการลงเวลาผ่านระบบ เพื่อใช้ตรวจสอบสถานที่ที่มีการลงเวลา</li>
+      <li>ข้อมูลเกี่ยวกับระบบและอุปกรณ์ เช่น ข้อมูลอุปกรณ์ ระบบปฏิบัติการ และข้อมูลทางเทคนิคที่จำเป็นต่อการใช้งานและรักษาความปลอดภัยของระบบ</li>
+      <li>ข้อมูลบัญชีที่เชื่อมต่อกับระบบ เช่น LINE User ID หรือข้อมูลอื่นที่จำเป็นต่อการเชื่อมต่อบัญชีพนักงานกับระบบของบริษัท</li>
+    </ul>
+    <p>รูปถ่ายพนักงานที่บริษัทจัดเก็บมีวัตถุประสงค์เพื่อใช้เป็นรูปประจำตัวพนักงานในระบบ และเพื่อให้ผู้มีสิทธิใช้งานระบบสามารถทราบว่าโปรไฟล์ดังกล่าวเป็นของพนักงานรายใดเท่านั้น ส่วนรูปถ่ายที่ถ่ายขณะลงเวลามีวัตถุประสงค์เพื่อให้ผู้ดูแลระบบตรวจสอบด้วยสายตาว่าผู้ลงเวลาเป็นพนักงานรายนั้นจริงเท่านั้น บริษัทไม่นำรูปถ่ายดังกล่าวไปวิเคราะห์ลักษณะทางชีวมิติ สร้างข้อมูลหรือแม่แบบชีวมิติ (Biometric Template) หรือใช้ในระบบจดจำหรือยืนยันตัวตนด้วยใบหน้า (Face Recognition / Face Verification)</p>
+    <h4>2. วัตถุประสงค์ในการเก็บรวบรวมและใช้ข้อมูล</h4>
+    <p>บริษัทอาจเก็บรวบรวม ใช้ หรือเปิดเผยข้อมูลส่วนบุคคลเพื่อวัตถุประสงค์ดังต่อไปนี้</p>
+    <ul>
+      <li>เพื่อลงทะเบียนและจัดทำบัญชีพนักงาน</li><li>เพื่อจัดทำและบริหารโปรไฟล์พนักงาน</li>
+      <li>เพื่อบริหารจัดการข้อมูลและความสัมพันธ์ในการจ้างงาน</li><li>เพื่อกำหนดและควบคุมสิทธิ์การเข้าใช้งานระบบ</li>
+      <li>เพื่อบันทึกและตรวจสอบเวลาเข้า–ออกงาน</li><li>เพื่อตรวจสอบสถานที่ที่มีการลงเวลาทำงาน</li>
+      <li>เพื่อการติดต่อและประสานงานที่เกี่ยวข้องกับการทำงาน</li><li>เพื่อรักษาความปลอดภัยและตรวจสอบการใช้งานระบบ</li>
+      <li>เพื่อป้องกันหรือตรวจสอบการใช้งานระบบโดยมิชอบ</li><li>เพื่อปฏิบัติตามหน้าที่หรือข้อกำหนดตามกฎหมายที่เกี่ยวข้อง</li>
+    </ul>
+    <p>บริษัทจะไม่นำข้อมูลส่วนบุคคลไปใช้เพื่อวัตถุประสงค์อื่นที่ไม่เกี่ยวข้องกับวัตถุประสงค์ที่ได้แจ้งไว้ เว้นแต่บริษัทมีฐานทางกฎหมายที่เหมาะสม หรือได้ดำเนินการแจ้งหรือขอความยินยอมตามที่กฎหมายกำหนด</p>
+    <h4>3. ฐานทางกฎหมายในการประมวลผลข้อมูล</h4>
+    <p>บริษัทจะประมวลผลข้อมูลส่วนบุคคลโดยอาศัยฐานทางกฎหมายที่เหมาะสมกับแต่ละกิจกรรมและวัตถุประสงค์ ได้แก่</p>
+    <ul>
+      <li><b>การปฏิบัติตามสัญญา</b> สำหรับการประมวลผลที่จำเป็นต่อการดำเนินการเกี่ยวกับการจ้างงานหรือความสัมพันธ์ระหว่างบริษัทกับพนักงาน</li>
+      <li><b>การปฏิบัติตามกฎหมาย</b> สำหรับการประมวลผลที่บริษัทมีหน้าที่ต้องดำเนินการตามกฎหมาย</li>
+      <li><b>ประโยชน์โดยชอบด้วยกฎหมาย</b> สำหรับการบริหารจัดการองค์กร การรักษาความปลอดภัย การจัดการสิทธิ์เข้าใช้งาน การตรวจสอบการลงเวลาทำงาน และการตรวจสอบการใช้งานระบบ โดยบริษัทจะคำนึงถึงสิทธิและเสรีภาพของพนักงานประกอบด้วย</li>
+      <li><b>ความยินยอม</b> เฉพาะกรณีที่กิจกรรมนั้นจำเป็นต้องอาศัยความยินยอมตามกฎหมาย</li>
+    </ul>
+    <p>การรับทราบประกาศความเป็นส่วนตัวฉบับนี้ไม่ถือเป็นการให้ความยินยอมสำหรับการประมวลผลข้อมูลส่วนบุคคลทุกประเภท หากบริษัทดำเนินกิจกรรมที่จำเป็นต้องอาศัยความยินยอม บริษัทจะดำเนินการขอความยินยอมแยกต่างหากตามความเหมาะสมและตามที่กฎหมายกำหนด</p>
+    <h4>4. การใช้ข้อมูลตำแหน่งที่ตั้ง (GPS)</h4>
+    <p>ในกรณีที่ระบบลงเวลาทำงานใช้ข้อมูลตำแหน่งที่ตั้ง บริษัทอาจเก็บข้อมูลพิกัดตำแหน่งของอุปกรณ์ ณ เวลาที่พนักงานดำเนินการลงเวลาผ่านระบบ เพื่อใช้ตรวจสอบว่าการลงเวลาเกิดขึ้นในสถานที่หรือบริเวณที่บริษัทกำหนด</p>
+    <p>บริษัทไม่มีวัตถุประสงค์ใช้ระบบดังกล่าวเพื่อติดตามตำแหน่งของพนักงานอย่างต่อเนื่องนอกกระบวนการลงเวลาทำงาน</p>
+    <h4>5. แหล่งที่มาของข้อมูล</h4>
+    <p>บริษัทอาจได้รับข้อมูลส่วนบุคคลโดยตรงจากพนักงาน เช่น จากการลงทะเบียน การกรอกข้อมูล การถ่ายหรืออัปโหลดรูปถ่าย และการใช้งานระบบของบริษัท</p>
+    <p>ข้อมูลบางประเภทอาจเกิดขึ้นจากการใช้งานระบบ เช่น วันและเวลาลงงาน ตำแหน่งที่ตั้ง ณ เวลาที่ลงเวลา และข้อมูลทางเทคนิคของอุปกรณ์</p>
+    <p>บริษัทอาจได้รับข้อมูลบางประเภทจากระบบหรือผู้ให้บริการที่บริษัทใช้ในการดำเนินงานเท่าที่จำเป็นต่อวัตถุประสงค์ที่ระบุไว้ในประกาศฉบับนี้</p>
+    <h4>6. การเปิดเผยข้อมูลส่วนบุคคล</h4>
+    <p>บริษัทจะไม่เปิดเผยข้อมูลส่วนบุคคลของพนักงานแก่บุคคลภายนอกโดยไม่มีเหตุอันสมควรหรือฐานทางกฎหมายที่เหมาะสม</p>
+    <p>บริษัทอาจเปิดเผยหรืออนุญาตให้บุคคลหรือผู้ให้บริการที่เกี่ยวข้องเข้าถึงข้อมูลเท่าที่จำเป็นต่อวัตถุประสงค์ที่กำหนด เช่น</p>
+    <ul>
+      <li>ผู้ให้บริการระบบสารสนเทศและระบบ Cloud</li><li>ผู้ให้บริการระบบสื่อสารหรือระบบที่เชื่อมต่อกับระบบพนักงาน</li>
+      <li>ผู้ให้บริการระบบบัญชี เงินเดือน หรือระบบบริหารจัดการพนักงาน</li><li>ที่ปรึกษาทางกฎหมาย บัญชี หรือผู้ให้บริการทางวิชาชีพที่เกี่ยวข้อง</li>
+      <li>หน่วยงานของรัฐหรือบุคคลที่มีอำนาจตามกฎหมาย</li>
+    </ul>
+    <p>บริษัทจะดำเนินการให้มีมาตรการที่เหมาะสมในการคุ้มครองข้อมูลส่วนบุคคลเมื่อมีการใช้ผู้ให้บริการภายนอกในการประมวลผลข้อมูล</p>
+    <p>ในกรณีที่บริษัทใช้ผู้ให้บริการระบบหรือระบบ Cloud ซึ่งอาจมีการจัดเก็บ ประมวลผล หรือส่งข้อมูลส่วนบุคคลไปยังต่างประเทศ บริษัทจะดำเนินการให้การส่งหรือโอนข้อมูลดังกล่าวเป็นไปตามหลักเกณฑ์และมาตรการคุ้มครองข้อมูลส่วนบุคคลที่กฎหมายกำหนด</p>
+    <h4>7. ระยะเวลาในการจัดเก็บข้อมูล</h4>
+    <p>บริษัทจะเก็บรักษาข้อมูลส่วนบุคคลเท่าที่จำเป็นต่อวัตถุประสงค์ที่ระบุไว้ในประกาศฉบับนี้ ตลอดระยะเวลาความสัมพันธ์ในการจ้างงาน และภายหลังสิ้นสุดการจ้างงานตามระยะเวลาที่จำเป็นเพื่อปฏิบัติตามกฎหมาย เพื่อประโยชน์ในการตรวจสอบ หรือเพื่อก่อตั้ง ใช้ หรือยกขึ้นต่อสู้สิทธิเรียกร้องตามกฎหมาย</p>
+    <p>ระยะเวลาในการจัดเก็บข้อมูลแต่ละประเภทอาจแตกต่างกันตามลักษณะของข้อมูล วัตถุประสงค์ในการประมวลผล และระยะเวลาที่กฎหมายที่เกี่ยวข้องกำหนด ทั้งนี้ รูปถ่ายที่ถ่ายขณะลงเวลาจะถูกลบอัตโนมัติเมื่อครบ __PHOTO_DAYS__ วันนับจากวันที่ลงเวลา</p>
+    <p>เมื่อข้อมูลส่วนบุคคลไม่มีความจำเป็นต่อวัตถุประสงค์ดังกล่าว และบริษัทไม่มีเหตุหรือฐานทางกฎหมายในการเก็บรักษาข้อมูลต่อไป บริษัทจะดำเนินการลบ ทำลาย หรือทำให้ข้อมูลไม่สามารถระบุตัวบุคคลได้ตามความเหมาะสมและตามที่กฎหมายกำหนด</p>
+    <h4>8. การรักษาความมั่นคงปลอดภัยของข้อมูล</h4>
+    <p>บริษัทจะใช้มาตรการด้านองค์กรและด้านเทคนิคที่เหมาะสมเพื่อป้องกันข้อมูลส่วนบุคคลจากการสูญหาย การเข้าถึง การใช้ การเปลี่ยนแปลง การแก้ไข การเปิดเผย หรือการประมวลผลโดยไม่มีอำนาจหรือโดยมิชอบ</p>
+    <p>บริษัทจะจำกัดการเข้าถึงข้อมูลส่วนบุคคลเฉพาะบุคคลที่มีความจำเป็นต้องใช้ข้อมูลตามหน้าที่และวัตถุประสงค์ที่เกี่ยวข้อง และจะทบทวนมาตรการรักษาความมั่นคงปลอดภัยตามความเหมาะสม</p>
+    <h4>9. สิทธิของเจ้าของข้อมูลส่วนบุคคล</h4>
+    <p>ภายใต้หลักเกณฑ์ เงื่อนไข และข้อจำกัดตามกฎหมาย พนักงานอาจมีสิทธิเกี่ยวกับข้อมูลส่วนบุคคลของตน ได้แก่</p>
+    <ul>
+      <li><b>สิทธิขอเข้าถึงข้อมูล</b> และขอรับสำเนาข้อมูลส่วนบุคคลของตน</li>
+      <li><b>สิทธิขอแก้ไขข้อมูล</b> ให้ถูกต้อง เป็นปัจจุบัน สมบูรณ์ และไม่ก่อให้เกิดความเข้าใจผิด</li>
+      <li><b>สิทธิขอลบหรือทำลายข้อมูล</b> หรือทำให้ข้อมูลไม่สามารถระบุตัวบุคคลได้ในกรณีที่กฎหมายกำหนด</li>
+      <li><b>สิทธิขอให้ระงับการใช้ข้อมูล</b> ในกรณีที่กฎหมายกำหนด</li>
+      <li><b>สิทธิคัดค้านการประมวลผลข้อมูล</b> ในกรณีที่กฎหมายกำหนด</li>
+      <li><b>สิทธิขอรับหรือโอนข้อมูลส่วนบุคคล</b> ในกรณีที่กฎหมายกำหนดและสามารถใช้สิทธิดังกล่าวได้</li>
+      <li><b>สิทธิถอนความยินยอม</b> สำหรับกิจกรรมที่อาศัยความยินยอมเป็นฐานในการประมวลผล โดยการถอนความยินยอมจะไม่กระทบต่อการประมวลผลที่ได้ดำเนินการโดยชอบก่อนการถอนความยินยอม</li>
+      <li><b>สิทธิร้องเรียน</b> ต่อสำนักงานคณะกรรมการคุ้มครองข้อมูลส่วนบุคคลหรือหน่วยงานที่มีอำนาจตามกฎหมาย หากพนักงานเห็นว่าการประมวลผลข้อมูลส่วนบุคคลของบริษัทไม่เป็นไปตามกฎหมาย</li>
+    </ul>
+    <p>การใช้สิทธิบางประการอาจมีข้อจำกัดตามกฎหมาย และบริษัทอาจปฏิเสธคำขอหรือจำเป็นต้องเก็บรักษาหรือประมวลผลข้อมูลบางรายการต่อไป หากบริษัทมีหน้าที่หรือฐานทางกฎหมายรองรับ โดยบริษัทจะดำเนินการตามหลักเกณฑ์ที่กฎหมายกำหนด</p>
+    <h4>10. การเปลี่ยนแปลงประกาศความเป็นส่วนตัว</h4>
+    <p>บริษัทอาจแก้ไขหรือปรับปรุงประกาศความเป็นส่วนตัวฉบับนี้เมื่อมีการเปลี่ยนแปลงกระบวนการทำงาน ระบบ เทคโนโลยี วัตถุประสงค์ในการประมวลผลข้อมูล หรือข้อกำหนดตามกฎหมาย</p>
+    <p>หากมีการเปลี่ยนแปลงที่มีสาระสำคัญ บริษัทจะแจ้งให้พนักงานทราบผ่านช่องทางที่เหมาะสม และจะระบุวันที่มีผลใช้บังคับหรือหมายเลขเวอร์ชันของประกาศที่ปรับปรุงใหม่</p>
+    <h4>11. ช่องทางการติดต่อ</h4>
+    <p>หากพนักงานมีข้อสงสัยเกี่ยวกับการเก็บรวบรวม ใช้ หรือเปิดเผยข้อมูลส่วนบุคคล หรือต้องการใช้สิทธิของเจ้าของข้อมูลส่วนบุคคล สามารถติดต่อบริษัทได้ที่</p>
+    <p><b>ผู้ควบคุมข้อมูลส่วนบุคคล</b><br>บริษัท ซำบายดีบ่ จำกัด<br>12/6 ถนนวัฒนานุวงศ์ ตำบลหมากแข้ง<br>อำเภอเมืองอุดรธานี จังหวัดอุดรธานี 41000</p>
+    <p>อีเมล: __EMAIL__<br>โทรศัพท์: __PHONE__</p>
+    <p class="muted">วันที่มีผลใช้บังคับ: __EFF__<br>เวอร์ชัน: __VER__</p>`;
+  function pdpaFill(t) {
+    const p = (BOOT && BOOT.pdpa) || {}, dash = '<span class="muted">(ติดต่อผู้ดูแล)</span>';
+    return t.replace(/__VER__/g, esc(BOOT ? BOOT.pdpaVersion : '1.0')).replace(/__PHOTO_DAYS__/g, esc(BOOT ? BOOT.photoDays : 60))
+      .replace(/__EMAIL__/g, p.email ? esc(p.email) : dash).replace(/__PHONE__/g, p.phone ? esc(p.phone) : dash)
+      .replace(/__EFF__/g, p.effective ? esc(p.effective) : '-');
+  }
+  function showPdpaFull() {
+    const m = document.createElement('div'); m.className = 'pdpa-modal';
+    m.innerHTML = '<div class="pdpa-box"><div class="consent full">' + pdpaFill(PDPA_FULL) + '</div><button class="btn" style="margin-top:12px">ปิด</button></div>';
+    m.querySelector('button').onclick = () => m.remove();
+    m.onclick = e => { if (e.target === m) m.remove(); };
+    document.body.appendChild(m);
+  }
+  let ID_TOKEN = '', BOOT = null, D = null, PAGE = 'me', TYPE = 'in', offset = 0, timer = null;
+  let STREAM = null, SHOT = '', CAM_MODE = 'live', POS = null;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  function toast(msg, kind) { const t = $('toast'); t.textContent = msg; t.className = 'toast ' + (kind || ''); t.style.display = 'block'; clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', kind === 'bad' ? 6000 : 3500); }
+  function busy(on, txt) { $('loading').style.display = on ? 'flex' : 'none'; if (txt) $('loading').textContent = txt; }
+  function thDate(ds) { if (!ds) return ''; const p = String(ds).split('-'); return +p[2] + '/' + +p[1] + '/' + (+p[0] + 543); }
+  function fmt(n) { return Number(n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function pill(s) { const k = /สาย|รอ/.test(s) ? 'warn' : /ไม่อนุมัติ|ขาด|ออกก่อน|ยกเลิก/.test(s) ? 'bad' : /ตรงเวลา|อนุมัติ|ออกงาน|พร้อมรับ|มา/.test(s) ? 'ok' : 'info'; return `<span class="pill ${k}">${esc(s)}</span>`; }
+  const thMonth = ym => { const m = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']; const p = ym.split('-'); return m[+p[1] - 1] + ' ' + (+p[0] + 543); };
+
+  /** เรียก Apps Script: ส่ง ID token ของ LINE ไปทุกครั้ง (ฝั่ง server ตรวจกับ LINE เอง) */
+  function api(fn, ...args) {
+    return fetch(CFG.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args: [ID_TOKEN, ...args] }) })
+      .catch(() => { throw new Error('เชื่อมต่อระบบไม่ได้ — ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'); })
+      .then(r => { if (!r.ok) throw new Error('ระบบไม่ตอบสนอง (' + r.status + ') ลองใหม่'); return r.json(); })
+      .then(j => { if (!j.ok) throw new Error(j.error); return j.data; });
+  }
+  function handleErr(e) {
+    const m = e.message || String(e);
+    if (m.indexOf('NOREG:') === 0) return go('register');
+    if (m.indexOf('PENDING:') === 0) return showPending();
+    if (m.indexOf('CONSENT:') === 0) return go('register');
+    if (m.indexOf('AUTH:') === 0) return showMsg('🔒', 'ยืนยันตัวตนไม่สำเร็จ', m.replace('AUTH: ', ''), [['ลองใหม่', () => location.reload()]]);
+    toast(m.replace(/^DUP: /, ''), 'bad');
+  }
+  function showMsg(icon, title, body, btns) {
+    hideAll(); $('vMsg').classList.remove('hide');
+    $('msgIcon').textContent = icon; $('msgTitle').textContent = title; $('msgBody').innerHTML = body || '';
+    $('msgBtns').innerHTML = ''; (btns || []).forEach(b => { const x = document.createElement('button'); x.className = 'btn' + (b[2] ? ' ghost' : ''); x.textContent = b[0]; x.onclick = b[1]; $('msgBtns').appendChild(x); });
+  }
+  function hideAll() { ['vMsg', 'vReg', 'vClock', 'vLeave', 'vMe'].forEach(v => $(v).classList.add('hide')); stopCam(); }
+  function showPending() { showMsg('⏳', 'รอผู้ดูแลอนุมัติ', 'ลงทะเบียนเรียบร้อยแล้ว ระบบจะส่งข้อความแจ้งใน LINE เมื่อผู้ดูแลอนุมัติ', [['ปิด', () => closeLiff()]]); $('nav').classList.add('hide'); }
+  function closeLiff() { try { if (liff.isInClient()) return liff.closeWindow(); } catch (e) { } window.close(); }
+  function deviceId() {
+    try { let d = localStorage.getItem('sb_device_id'); if (!d) { d = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()); localStorage.setItem('sb_device_id', d); } return d; }
+    catch (e) { return ''; }
+  }
+  function deviceInfo() {
+    const ua = navigator.userAgent;
+    let dev = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : (ua.match(/Android [\d.]+; ([^;)]+)/) || [])[1] || (/Android/.test(ua) ? 'Android' : 'อื่นๆ');
+    const os = (ua.match(/OS ([\d_]+) like Mac/) || [])[1] ? 'iOS ' + ua.match(/OS ([\d_]+) like Mac/)[1].replace(/_/g, '.') : ((ua.match(/Android ([\d.]+)/) || [])[1] ? 'Android ' + ua.match(/Android ([\d.]+)/)[1] : '');
+    let line = ''; try { line = 'LINE ' + liff.getLineVersion(); } catch (e) { }
+    return [dev.trim(), os, line, screen.width + 'x' + screen.height].filter(Boolean).join(' · ');
+  }
+  function distM(a, b, c, d) { const R = 6371000, t = Math.PI / 180, x = (c - a) * t, y = (d - b) * t; const h = Math.sin(x / 2) ** 2 + Math.cos(a * t) * Math.cos(c * t) * Math.sin(y / 2) ** 2; return 2 * R * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h)); }
+
+  /* =========================================================
+   * เริ่มต้น: LIFF login → ID token → ถามสถานะจาก server
+   * ========================================================= */
+  async function start() {
+    try {
+      if (!window.liff) throw new Error('โหลด LINE SDK ไม่สำเร็จ');
+      if (!/^\d+-\w+$/.test(CFG.LIFF_ID || '') || !/\/exec$/.test(CFG.API_URL || '')) throw new Error('ผู้ดูแลยังตั้งค่า config.js ไม่ครบ (LIFF_ID / API_URL)');
+      await liff.init({ liffId: CFG.LIFF_ID });
+      if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+      ID_TOKEN = liff.getIDToken();
+      const q = new URLSearchParams(location.search);
+      PAGE = q.get('page') || 'me'; TYPE = q.get('type') === 'out' ? 'out' : 'in';
+      BOOT = await api('liffBootstrap');
+      offset = BOOT.serverMs - Date.now();
+      $('hdr').textContent = BOOT.me ? BOOT.me.name : BOOT.lineName;
+      busy(false);
+      if (!BOOT.registered || BOOT.needConsent) return go('register');
+      if (BOOT.status === 'รออนุมัติ') return showPending();
+      if (BOOT.status === 'ระงับ') return showMsg('⛔', 'บัญชีถูกระงับ', 'ติดต่อผู้ดูแล');
+      if (PAGE === 'register') PAGE = 'me';
+      go(PAGE, TYPE, q.get('tab'));
+    } catch (e) {
+      busy(false);
+      if (/AUTH|IdToken|expired/i.test(e.message)) { try { liff.logout(); } catch (x) { } }
+      showMsg('⚠️', 'เปิดระบบไม่สำเร็จ', esc(e.message.replace('AUTH: ', '')) + '<br><br>ลองปิดหน้านี้แล้วเปิดใหม่จากเมนูใน LINE', [['ลองใหม่', () => location.reload()]]);
+    }
+  }
+  function go(page, type, tab) {
+    hideAll(); PAGE = page;
+    const nav = $('nav'); nav.classList.toggle('hide', page === 'register' || !BOOT || BOOT.status !== 'ใช้งาน');
+    nav.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === (page === 'clock' ? 'clock' + (type || TYPE) : page)));
+    if (page === 'register') return showRegister();
+    if (page === 'clock') { TYPE = type || TYPE; return showClock(); }
+    if (page === 'leave') return loadDash().then(renderLeave).catch(() => { });
+    return loadDash().then(() => renderMe(tab)).catch(() => { });
+  }
+
+  /* =========================================================
+   * ลงทะเบียน + PDPA
+   * ========================================================= */
+  function showRegister() {
+    $('vReg').classList.remove('hide');
+    $('consentText').innerHTML = pdpaFill(PDPA_SHORT);
+    $('pdpaVer').textContent = BOOT ? BOOT.pdpaVersion : '';
+    const re = BOOT && BOOT.registered && BOOT.needConsent;
+    $('regTitle').textContent = re ? 'ประกาศความเป็นส่วนตัวฉบับใหม่' : 'ลงทะเบียนพนักงาน';
+    $('regSub').textContent = re ? 'บริษัทปรับปรุงประกาศความเป็นส่วนตัว กรุณาอ่านและกดรับทราบอีกครั้ง' : 'ทำครั้งเดียว ใช้รหัสพนักงานที่ได้รับจากผู้ดูแล';
+    if (re && BOOT.me) { $('rCode').value = BOOT.me.id; $('rName').value = BOOT.me.name.split(' ')[0]; $('regFields').classList.add('hide'); }
+    if (BOOT && BOOT.registered && !BOOT.needConsent) showMsg('✅', 'ลงทะเบียนแล้ว', 'บัญชี LINE นี้ผูกกับ ' + esc(BOOT.me.name) + ' (' + esc(BOOT.me.id) + ') — สถานะ: ' + esc(BOOT.status), [['ไปหน้าของฉัน', () => go('me')]]);
+  }
+  async function doRegister() {
+    if (!$('rConsent').checked) return toast('กรุณาติ๊กรับทราบประกาศความเป็นส่วนตัวก่อน', 'bad');
+    busy(true, 'กำลังลงทะเบียน…');
+    try {
+      const r = await api('register', $('rCode').value, $('rName').value, true, BOOT.pdpaVersion);
+      busy(false);
+      if (r.status === 'ใช้งาน') { BOOT = await api('liffBootstrap'); toast('ยืนยันแล้ว', 'ok'); return go('me'); }
+      BOOT.registered = true; BOOT.status = r.status;
+      showMsg('📨', 'ส่งคำขอลงทะเบียนแล้ว', 'คุณ' + esc(r.name) + '<br>รอผู้ดูแลอนุมัติ ระบบจะแจ้งใน LINE เมื่อพร้อมใช้งาน', [['ปิด', () => closeLiff()]]);
+    } catch (e) { busy(false); toast(e.message, 'bad'); }
+  }
+  function toggleAdminReg() { $('admReg').classList.toggle('hide'); }
+  async function doRegisterAdmin() {
+    busy(true, 'กำลังลงทะเบียนผู้ดูแล…');
+    try { await api('registerAdmin', $('rPass').value); busy(false); showMsg('🛡', 'ลงทะเบียนผู้ดูแลแล้ว', 'เปิดหน้าผู้ดูแลได้จากเมนู "ผู้ดูแล" (ปิดแชตแล้วเปิดใหม่เพื่อให้เมนูเปลี่ยน)', [['เปิดหน้าผู้ดูแล', () => location.href = 'admin.html']]); }
+    catch (e) { busy(false); toast(e.message, 'bad'); }
+  }
+
+  /* =========================================================
+   * ลงเวลา: GPS → กล้องสด (ห้ามเลือกรูปจากอัลบั้ม) → ส่ง → ส่งรหัสอ้างอิงเข้าแชต → ปิด
+   * ========================================================= */
+  function showClock() {
+    $('vClock').classList.remove('hide');
+    const isIn = TYPE === 'in';
+    $('ckTitle').textContent = isIn ? '🟢 ลงเวลาเข้างาน' : '🔴 ลงเวลาออกงาน';
+    $('ckCard').className = 'card center photo-card ' + (isIn ? 'tubs' : 'sauna');
+    $('ckDate').textContent = 'วัน' + { อา: 'อาทิตย์', จ: 'จันทร์', อ: 'อังคาร', พ: 'พุธ', พฤ: 'พฤหัสบดี', ศ: 'ศุกร์', ส: 'เสาร์' }[BOOT.dow] + 'ที่ ' + thDate(BOOT.today);
+    const t = BOOT.todayAtt || {};
+    $('ckToday').textContent = 'วันนี้: เข้า ' + (t.inTime || '—') + ' · ออก ' + (t.outTime || '—') + ' · เวลางาน ' + BOOT.work.start + '–' + BOOT.work.end;
+    clearInterval(timer); const tick = () => $('ckClock').textContent = new Date(Date.now() + offset).toLocaleTimeString('th-TH', { timeZone: 'Asia/Bangkok', hour12: false }); tick(); timer = setInterval(tick, 1000);
+    $('ckNote').innerHTML = isIn ? 'เกิน ' + BOOT.work.start + ' + ' + BOOT.work.grace + ' นาที ถือว่าสาย'
+      : (BOOT.work.autoOut ? 'เลิกงานตามเวลา <b>ไม่ต้องกด</b> ระบบลงเวลาออก ' + BOOT.work.end + ' ให้เอง · ' : '') + 'กดเมื่ออยู่ทำงานเกินเวลา (OT เริ่มนับหลังเลิกงาน ' + BOOT.work.otAfter + ' นาที คิดเต็มชั่วโมง)';
+    // ลงไว้แล้ว → แจ้งเลย ไม่ต้องเปิดกล้อง
+    if (isIn && t.inTime) return dupMsg('เข้างาน', t.inTime);
+    if (!isIn && t.outTime) return dupMsg('ออกงาน', t.outTime);
+    if (!isIn && !t.inTime) return showMsg('ℹ️', 'ยังไม่ได้ลงเวลาเข้างานวันนี้', '', [['ลงเวลาเข้างาน', () => go('clock', 'in')]]);
+    resetSteps(); getGps(); startCam();
+  }
+  function dupMsg(label, time) { showMsg('ℹ️', 'วันนี้ลงเวลา' + label + 'ไว้แล้ว', 'เวลา ' + esc(time) + ' น.', [['ดูประวัติ', () => go('me')], ['ปิด', () => closeLiff(), true]]); }
+  function setStep(id, state, text) { $(id).className = 'step ' + (state || ''); $(id).querySelector('.dot').textContent = state === 'ok' ? '✓' : state === 'bad' ? '!' : (id === 'stGps' ? '1' : '2'); if (text) $(id === 'stGps' ? 'gpsTxt' : 'camTxt').innerHTML = text; }
+  function resetSteps() { POS = null; SHOT = ''; CAM_MODE = 'live'; $('shot').classList.add('hide'); $('video').classList.remove('hide'); $('afterShot').classList.add('hide'); $('btnShot').classList.remove('hide'); $('btnShot').disabled = true; }
+  function getGps() {
+    setStep('stGps', '', 'กำลังหาตำแหน่ง…');
+    if (!navigator.geolocation) return setStep('stGps', 'bad', 'โทรศัพท์ไม่รองรับ GPS');
+    navigator.geolocation.getCurrentPosition(p => {
+      POS = p.coords;
+      const d = BOOT.geo.lat ? Math.round(distM(POS.latitude, POS.longitude, BOOT.geo.lat, BOOT.geo.lng)) : null;
+      const acc = Math.round(POS.accuracy);
+      if (d !== null && d > BOOT.geo.radius) return setStep('stGps', 'bad', `อยู่นอกพื้นที่ทำงาน (ห่าง ${d} ม.) <a href="#" onclick="getGps();return false">ลองใหม่</a>`);
+      setStep('stGps', 'ok', (d !== null ? `อยู่ในพื้นที่ทำงาน (ห่าง ${d} ม.)` : 'ได้ตำแหน่งแล้ว') + ` · ±${acc} ม.` + (acc > BOOT.geo.accFlag ? ' <span class="pill warn">สัญญาณอ่อน — ลงได้แต่จะถูกตรวจสอบ</span>' : ''));
+    }, err => {
+      const m = err.code === 1 ? 'ไม่ได้อนุญาตตำแหน่ง — ไปที่ ตั้งค่าโทรศัพท์ → LINE → ตำแหน่ง → อนุญาต' : err.code === 3 ? 'หาตำแหน่งไม่ทัน' : 'อ่านตำแหน่งไม่ได้ — เปิด Location';
+      setStep('stGps', 'bad', m + ' <a href="#" onclick="getGps();return false">ลองใหม่</a>');
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+  }
+  async function startCam() {
+    setStep('stCam', '', 'กำลังเปิดกล้องหน้า…');
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no getUserMedia');
+      STREAM = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 853 } }, audio: false });
+      const v = $('video'); v.srcObject = STREAM; await v.play().catch(() => { });
+      CAM_MODE = 'live'; $('btnShot').disabled = false; $('camHint').textContent = 'ให้เห็นใบหน้าชัด ๆ แล้วกดถ่ายรูป';
+      setStep('stCam', '', 'มองกล้องแล้วกด "ถ่ายรูป"');
+    } catch (e) {
+      // โหมดสำรอง: เปิดกล้องผ่านระบบของโทรศัพท์ (ถูกติดธงตรวจสอบ)
+      CAM_MODE = 'fallback';
+      $('video').classList.add('hide'); $('camHint').textContent = '';
+      setStep('stCam', '', 'เปิดกล้องในหน้านี้ไม่ได้ — กดปุ่มด้านล่างเพื่อถ่ายด้วยกล้องโทรศัพท์ <span class="pill warn">โหมดสำรอง</span>');
+      $('btnShot').disabled = false; $('btnShot').textContent = '📷 เปิดกล้องถ่ายรูป';
+    }
+  }
+  function stopCam() { if (STREAM) { STREAM.getTracks().forEach(t => t.stop()); STREAM = null; } clearInterval(timer); }
+  function takeShot() {
+    if (CAM_MODE === 'fallback') { $('fileCam').value = ''; return $('fileCam').click(); }
+    const v = $('video');
+    if (!v.videoWidth) return toast('กล้องยังไม่พร้อม', 'bad');
+    const c = document.createElement('canvas'); const w = 480, h = Math.round(v.videoHeight * w / v.videoWidth);
+    c.width = w; c.height = h; const g = c.getContext('2d'); g.translate(w, 0); g.scale(-1, 1); g.drawImage(v, 0, 0, w, h);
+    finishShot(c);
+  }
+  $('fileCam').addEventListener('change', ev => {
+    const f = ev.target.files && ev.target.files[0]; if (!f) return;
+    // ตรวจว่าเป็นรูปที่เพิ่งถ่าย (กันเลือกรูปเก่าจากอัลบั้มในเครื่องที่ไม่รองรับ capture)
+    if (f.lastModified && Math.abs(Date.now() - f.lastModified) > 5 * 60 * 1000) return toast('กรุณาถ่ายรูปใหม่ ไม่ใช้รูปเก่าจากอัลบั้ม', 'bad');
+    const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); const w = 480, h = Math.round(img.height * w / img.width); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h); URL.revokeObjectURL(img.src); finishShot(c, true); };
+    img.src = URL.createObjectURL(f);
+  });
+  async function finishShot(canvas, noflip) {
+    let q = 0.72, url = canvas.toDataURL('image/jpeg', q);
+    while (url.length * 0.75 > 50 * 1024 && q > 0.3) { q -= 0.08; url = canvas.toDataURL('image/jpeg', q); }
+    if (url.length * 0.75 > 50 * 1024) { const c2 = document.createElement('canvas'); c2.width = 360; c2.height = Math.round(canvas.height * 360 / canvas.width); c2.getContext('2d').drawImage(canvas, 0, 0, c2.width, c2.height); url = c2.toDataURL('image/jpeg', 0.6); }
+    if (!(await faceCheck(canvas))) return toast('ไม่พบใบหน้า ลองถ่ายใหม่', 'bad');
+    SHOT = url;
+    $('shot').src = url; $('shot').classList.remove('hide'); $('shot').classList.toggle('noflip', true); $('video').classList.add('hide');
+    $('btnShot').classList.add('hide'); $('afterShot').classList.remove('hide');
+    setStep('stCam', 'ok', 'ถ่ายรูปแล้ว (' + Math.round(url.length * 0.75 / 1024) + ' KB)');
+    if (STREAM) { STREAM.getTracks().forEach(t => t.stop()); STREAM = null; }
+  }
+  /** จุดต่อยอด: เทียบใบหน้าด้วย face-api.js (เปิดด้วย FACE_VERIFY ในชีต Config) — ตอนนี้ยังไม่บังคับ */
+  async function faceCheck(canvas) {
+    if (!BOOT.faceVerify) return true;
+    // TODO: โหลด face-api.js + โมเดล แล้วตรวจว่ามีใบหน้า/ตรงกับรูปลงทะเบียน
+    return true;
+  }
+  function retake() { $('btnShot').textContent = '📸 ถ่ายรูป'; resetSteps(); getGps(); startCam(); }
+  async function submitClock() {
+    if (!POS) return toast('ยังไม่ได้ตำแหน่ง GPS — กด "ลองใหม่" ที่ขั้นตอนที่ 1', 'bad');
+    if (!SHOT && BOOT.photoRequired) return toast('กรุณาถ่ายรูปก่อน', 'bad');
+    $('btnSubmit').disabled = true; busy(true, 'กำลังบันทึก…');
+    try {
+      const r = await api('clock', TYPE, POS.latitude, POS.longitude, POS.accuracy, SHOT, CAM_MODE, deviceId(), deviceInfo(), '');
+      busy(false); stopCam();
+      // ส่งรหัสอ้างอิงเข้าแชต → webhook ตอบใบยืนยัน (reply ฟรี) แล้วปิดหน้า
+      let sent = false;
+      try { if (liff.isInClient()) { await liff.sendMessages([{ type: 'text', text: 'ลงเวลา #' + r.ref }]); sent = true; } } catch (e) { }
+      if (sent) return liff.closeWindow();
+      showMsg('✅', 'ลงเวลา' + (r.type === 'IN' ? 'เข้างาน' : 'ออกงาน') + 'สำเร็จ', `${esc(r.date)} เวลา <b>${esc(r.time)} น.</b><br>📍 อยู่ในพื้นที่ทำงาน (ห่าง ${r.dist} ม.)` +
+        (r.lateMin ? `<br>⏰ สาย ${r.lateMin} นาที` : '') + (r.otHours ? `<br>🕒 OT ${r.otHours} ชม.` : '') + `<br><span class="muted">รหัสอ้างอิง #${esc(r.ref)}</span>`, [['ปิด', () => closeLiff()]]);
+    } catch (e) {
+      busy(false); $('btnSubmit').disabled = false;
+      const m = e.message || '';
+      if (m.indexOf('DUP:') === 0) return showMsg('ℹ️', 'ลงเวลาไว้แล้ว', esc(m.replace('DUP: ', '')), [['ปิด', () => closeLiff()]]);
+      handleErr(e);
+    }
+  }
+
+  /* =========================================================
+   * ข้อมูลของฉัน / ลางาน
+   * ========================================================= */
+  async function loadDash() {
+    busy(true, 'กำลังโหลด…');
+    try { D = await api('getMyDashboard'); busy(false); }
+    catch (e) { busy(false); handleErr(e); throw e; }
+  }
+  function renderLeave() {
+    $('vLeave').classList.remove('hide');
+    const b = D.balance;
+    $('balGrid').innerHTML = ['VAC', 'PER', 'SICK'].map(k => `<div class="stat"><span>${b[k].label}</span><b>${b[k].left}</b><span>ใช้ ${b[k].used}${b[k].pending ? ' · รอ ' + b[k].pending : ''} / ${b[k].quota}</span></div>`).join('')
+      + `<div class="stat"><span>วันหยุดชดเชย</span><b>${b.COMP.left}</b><span>${b.COMP.list[0] ? 'ใช้ก่อน ' + thDate(b.COMP.list[0].expire) : '—'}</span></div>`;
+    $('probLbl').textContent = b.vacEligible ? 'ผ่านทดลองงานแล้ว — ใช้ลาพักร้อนได้' : 'ยังไม่ผ่านทดลองงาน — ลาพักร้อนได้ตั้งแต่ ' + thDate(b.probEnd);
+    $('compList').innerHTML = b.COMP.list.length ? '<table><tr><th>วันหยุด</th><th>ใช้ได้ถึง</th></tr>' + b.COMP.list.map(x => `<tr><td>${thDate(x.date)} ${esc(x.name)}</td><td>${thDate(x.expire)}</td></tr>`).join('') + '</table>' : 'ยังไม่มี';
+    $('lvHint').textContent = `ลาไม่เกิน ${D.approvalOver} วันทำงาน อนุมัติอัตโนมัติ · เกินนั้นรอผู้ดูแลอนุมัติ · ไม่นับวันหยุดประจำสัปดาห์ (${D.work.weeklyOff})`;
+    if (!$('lvFrom').value) { $('lvFrom').value = D.today; $('lvTo').value = D.today; }
+    $('myLeaves').innerHTML = D.leaves.length ? '<table><tr><th>ประเภท</th><th>วันที่</th><th>สถานะ</th><th></th></tr>' + D.leaves.map(l =>
+      `<tr><td>${esc(l.typeLabel)}<div class="muted">${l.days} วัน</div></td><td>${thDate(l.from)}${l.to !== l.from ? '–' + thDate(l.to) : ''}</td><td>${pill(l.status)}${l.approverNote ? '<div class="muted">' + esc(l.approverNote) + '</div>' : ''}</td>
+       <td>${(l.status === 'รออนุมัติ' || (l.status === 'อนุมัติ' && l.from > D.today)) ? `<button class="btn sm ghost" onclick="cancelLv('${esc(l.id)}')">ยกเลิก</button>` : ''}</td></tr>`).join('') + '</table>' : '<p class="muted">ยังไม่มี</p>';
+  }
+  async function doLeave() {
+    busy(true, 'กำลังส่งคำขอ…');
+    try { const r = await api('requestLeave', $('lvType').value, $('lvFrom').value, $('lvTo').value, $('lvReason').value); busy(false); toast('ส่งคำขอลา ' + r.days + ' วัน · ' + r.status, r.status === 'อนุมัติ' ? 'ok' : ''); $('lvReason').value = ''; go('leave'); }
+    catch (e) { busy(false); handleErr(e); }
+  }
+  async function cancelLv(id) {
+    if (!confirm('ยกเลิกคำขอลานี้?')) return;
+    busy(true); try { await api('cancelLeave', id); busy(false); toast('ยกเลิกแล้ว', 'ok'); go('leave'); } catch (e) { busy(false); handleErr(e); }
+  }
+  function renderMe(tab) {
+    $('vMe').classList.remove('hide');
+    $('meName').textContent = D.me.name;
+    $('meSub').textContent = D.me.id + (D.me.position ? ' · ' + D.me.position : '') + ' · ' + D.me.status + ' · เริ่มงาน ' + thDate(D.me.start);
+    $('adminBtn').classList.toggle('hide', !BOOT.isAdmin);
+    // ประวัติ
+    $('histBody').innerHTML = D.history.filter(x => x.code !== 'NA').map(x => `<tr class="c-${x.code}"><td>${x.dow} ${thDate(x.d)}${x.hol ? '<div class="muted">🎌 ' + esc(x.hol) + '</div>' : ''}</td>
+      <td>${esc(x.label)}${x.code === 'LATE' ? ' ' + x.lateMin + ' น.' : ''}${x.pendingLeave ? '<div class="muted">ลารออนุมัติ</div>' : ''}</td><td>${x.in}</td><td>${x.out}${x.autoOut ? '<div class="muted">อัตโนมัติ</div>' : ''}</td></tr>`).join('');
+    // ผลงาน
+    $('perfBox').innerHTML = D.performance.map(p => `<div class="card"><h3>${thMonth(p.month)}</h3>
+      <div class="perf"><div class="stat"><span>มาทำงาน</span><b>${p.present}</b><span>จาก ${p.sched} วัน</span></div><div class="stat"><span>ตรงเวลา</span><b>${p.onTimePct}%</b><span>สาย ${p.late} ครั้ง</span></div><div class="stat"><span>OT</span><b>${p.ot}</b><span>ชั่วโมง</span></div></div>
+      <div style="margin-top:10px" class="muted">การมาทำงาน ${p.attendPct}%</div><div class="bar"><i style="width:${Math.min(100, p.attendPct)}%"></i></div>
+      <p class="muted" style="margin:8px 0 0">ขาด ${p.absent} · ลา ${p.leave} · สายรวม ${p.lateMin} นาที · ลืมลงเวลาออก ${p.missOut}</p></div>`).join('') || '<div class="card muted">ยังไม่มีข้อมูล</div>';
+    // เงินเดือน
+    $('payList').innerHTML = D.payslips.length ? '<table><tr><th>งวด</th><th class="money">สุทธิ</th><th></th></tr>' + D.payslips.map((p, i) =>
+      `<tr><td>${thMonth(p.month)}</td><td class="money"><b>${fmt(p['เงินได้สุทธิ'])}</b></td><td><button class="btn sm ghost" onclick="showPay(${i})">รายละเอียด</button></td></tr>`).join('') + '</table>' : '<p class="muted">ยังไม่มีงวดที่ปิดแล้ว</p>';
+    // เอกสาร
+    $('myDocs').innerHTML = D.docs.length ? '<table><tr><th>เอกสาร</th><th>สถานะ</th></tr>' + D.docs.map(d =>
+      `<tr><td>${esc(d.typeLabel)}${d.month ? ' ' + esc(d.month) : ''}<div class="muted">${thDate(d.ts.slice(0, 10))}${d.purpose ? ' · ' + esc(d.purpose) : ''}</div></td>
+       <td>${pill(d.status)}${d.link ? `<div><a href="${esc(d.link)}" target="_blank" rel="noopener">เปิดเอกสาร</a></div>` : ''}${d.adminNote ? '<div class="muted">' + esc(d.adminNote) + '</div>' : ''}</td></tr>`).join('') + '</table>' : '<p class="muted">ยังไม่มี</p>';
+    // หมายเหตุ
+    $('myNotes').innerHTML = D.notes.length ? '<table><tr><th>วันที่</th><th>รายละเอียด</th><th>OT</th></tr>' + D.notes.map(n => `<tr><td>${thDate(n.ds)}</td><td>${esc(n.text)}</td><td>${n.ot ? n.ot + ' ชม.<br>' + pill(n.otStatus) : ''}</td></tr>`).join('') + '</table>' : '<p class="muted">ยังไม่มี</p>';
+    if (!$('ntDate').value) { $('ntDate').value = D.today; $('ntDate').max = D.today; }
+    meTab(tab || 'hist');
+  }
+  function meTab(t) {
+    const map = { hist: 'tHist', perf: 'tPerf', pay: 'tPay', docs: 'tDocs', note: 'tNote' };
+    if (!map[t]) t = 'hist';
+    document.querySelectorAll('#meTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+    Object.keys(map).forEach(k => $(map[k]).classList.toggle('hide', k !== t));
+  }
+  document.querySelectorAll('#meTabs button').forEach(b => b.onclick = () => meTab(b.dataset.t));
+  function showPay(i) {
+    const x = D.payslips[i]; const L = (a, v, neg) => `<tr><td>${esc(a)}</td><td class="money">${neg ? '-' : ''}${fmt(v)}</td></tr>`;
+    $('payDetail').classList.remove('hide');
+    $('payDetail').innerHTML = `<h3>สลิปเงินเดือน ${thMonth(x.month)}</h3>
+      <p class="muted">มาทำงาน ${x['วันมาทำงาน']}/${x['วันทำงานตามตาราง']} วัน · สาย ${x['มาสาย(ครั้ง)']} ครั้ง · ขาด ${x['ขาดงาน(วัน)']} วัน · OT ${x['OT ปกติ(ชม.)'] + x['OT วันหยุด(ชม.)']} ชม.</p>
+      <table>${L('เงินเดือน', x['เงินเดือนตามสัดส่วน'])}${L('ค่าล่วงเวลา', x['ค่าล่วงเวลา'])}${L('ค่าทำงานวันหยุด', x['ค่าทำงานวันหยุด'])}${L('เบี้ยขยัน', x['เบี้ยขยัน'])}${L('เงินได้อื่น', x['เงินได้อื่น(กรอกเอง)'])}
+      ${L('หักขาดงาน', x['หักขาดงาน'], 1)}${L('หักมาสาย', x['หักมาสาย'], 1)}<tr><th>รวมเงินได้</th><th class="money">${fmt(x['รวมเงินได้'])}</th></tr>
+      ${L('ประกันสังคม', x['ประกันสังคม'], 1)}${L('ภาษีหัก ณ ที่จ่าย', x['ภาษีหัก ณ ที่จ่าย(กรอกเอง)'], 1)}${L('หักอื่นๆ', x['หักอื่นๆ(กรอกเอง)'], 1)}
+      <tr><th>เงินได้สุทธิ</th><th class="money">${fmt(x['เงินได้สุทธิ'])}</th></tr></table>
+      <div style="height:10px"></div><button class="btn" onclick="reqSlip('${x.month}')">🧾 ขอสลิป PDF</button>`;
+    $('payDetail').scrollIntoView({ behavior: 'smooth' });
+  }
+  async function reqSlip(ym) {
+    busy(true, 'กำลังสร้างสลิป…');
+    try { const r = await api('requestDocument', 'PAYSLIP', ym, ''); busy(false); if (r.url) { toast('สลิปพร้อมแล้ว', 'ok'); liff.openWindow({ url: r.url, external: true }); } else toast('ส่งคำขอแล้ว', 'ok'); }
+    catch (e) { busy(false); handleErr(e); }
+  }
+  let DOC_TYPE = '';
+  function pickDoc(t) {
+    DOC_TYPE = t; $('docForm').classList.remove('hide'); $('docTitle').textContent = 'ขอ' + D.docTypes[t];
+    $('docMonthBox').classList.toggle('hide', t !== 'PAYSLIP');
+    if (!$('docMonth').value) { const d = new Date(D.today + 'T00:00:00Z'); d.setUTCDate(0); $('docMonth').value = d.toISOString().slice(0, 7); }
+  }
+  async function doDoc() {
+    busy(true, 'กำลังส่งคำขอ…');
+    try {
+      const r = await api('requestDocument', DOC_TYPE, $('docMonth').value, $('docPurpose').value); busy(false);
+      toast(r.url ? 'เอกสารพร้อมแล้ว' : 'ส่งคำขอแล้ว ผู้ดูแลจะแจ้งใน LINE เมื่อพร้อม', 'ok');
+      $('docPurpose').value = ''; $('docForm').classList.add('hide'); await loadDash(); renderMe('docs');
+    } catch (e) { busy(false); handleErr(e); }
+  }
+  async function doNote() {
+    const txt = $('ntText').value.trim(); if (!txt) return toast('กรุณาใส่รายละเอียด', 'bad');
+    busy(true, 'กำลังบันทึก…');
+    try { await api('addRemark', $('ntDate').value, txt, 0); busy(false); toast('บันทึกแล้ว', 'ok'); $('ntText').value = ''; await loadDash(); renderMe('note'); }
+    catch (e) { busy(false); handleErr(e); }
+  }
+
+  start();
+</script>
+</body>
+</html>

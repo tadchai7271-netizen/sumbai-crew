@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Sumbai Crew — ผู้ดูแล</title>
+  <!-- ไฟล์นี้อยู่บน GitHub Pages: เปิดได้ทั้งใน LINE (เข้าด้วย LINE) และใน Safari/Chrome (เข้าด้วยรหัสผู้ดูแล) -->
+  <script src="config.js"></script>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  /*
+   * ฟอนต์ของ SUMBAI
+   * - ข้อความทั้งหมด: Sukhumvit Set (มีในเครื่อง iPhone / iPad / Mac อยู่แล้ว)
+   *   เครื่อง Android / Windows ที่ไม่มีฟอนต์นี้ จะใช้ Sarabun แทนอัตโนมัติ
+   * - ชื่อร้าน: JA Jayagiri Sans
+   *   ตอนนี้ใช้ได้เฉพาะเครื่องที่ติดตั้งฟอนต์นี้ไว้
+   *   ถ้าต้องการให้ทุกเครื่องเห็น: ส่งไฟล์ฟอนต์ (.ttf/.otf) ให้ Claude
+   *   เพื่อตัดเฉพาะตัวอักษรชื่อร้านแล้วฝังไว้ในบรรทัด BRAND-FONT-DATA ด้านล่าง
+   */
+  @font-face {
+    font-family: 'SB Brand';
+    src: local('JA Jayagiri Sans'), local('JAJayagiriSans'), local('JA Jayagiri Sans Regular'), local('JAJayagiriSans-Regular')
+      /* BRAND-FONT-DATA */;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'SB Text';
+    src: local('Sukhumvit Set'), local('SukhumvitSet-Text'), local('Sukhumvit Set Text');
+    font-weight: 400;
+  }
+  @font-face {
+    font-family: 'SB Text';
+    src: local('Sukhumvit Set Medium'), local('SukhumvitSet-Medium'), local('Sukhumvit Set');
+    font-weight: 500;
+  }
+  @font-face {
+    font-family: 'SB Text';
+    src: local('Sukhumvit Set SemiBold'), local('SukhumvitSet-SemiBold'), local('Sukhumvit Set Bold');
+    font-weight: 600;
+  }
+  @font-face {
+    font-family: 'SB Text';
+    src: local('Sukhumvit Set Bold'), local('SukhumvitSet-Bold');
+    font-weight: 700;
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --olive: #536238; --olive-2: #7A8758; --olive-3: #3E4A28; --sage: #C9CFB0; --cream: #FBF7EE; --cream-2: #EFEBDC; --line: #DFDBC8;
+    --ink: #2A2F1C; --muted: #6D7157; --ok: #2f7d4a; --warn: #b7791f; --bad: #b3261e; --info: #2c5d8a;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--cream); color: var(--ink);
+    font-family: 'SB Text', 'Sukhumvit Set', 'Sarabun', system-ui, -apple-system, sans-serif; font-size: 16px; line-height: 1.45; }
+  .brand { font-family: 'SB Brand', 'JA Jayagiri Sans', 'SB Text', 'Sukhumvit Set', 'Sarabun', sans-serif; font-weight: 400; letter-spacing: 1px; }
+  button, input, select, textarea { font-family: inherit; font-size: 16px; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 16px 16px 90px; }
+  .wrap.wide { max-width: 1200px; }
+  header.top { background: var(--olive); color: var(--cream); padding: 14px 16px; position: sticky; top: 0; z-index: 10; }
+  header.top .in { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  header.top b { font-size: 20px; letter-spacing: .5px; }
+  header.top .brand { font-size: 24px; }
+  header.top small { opacity: .8; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin: 12px 0; }
+  .card h3 { margin: 0 0 10px; font-size: 17px; color: var(--olive); }
+  .muted { color: var(--muted); font-size: 14px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .row > * { flex: 1 1 140px; }
+  label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px; }
+  input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); }
+  textarea { min-height: 70px; resize: vertical; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border-radius: 10px; border: 1px solid var(--olive);
+    background: var(--olive); color: var(--cream); font-weight: 600; cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--olive); }
+  .btn.sm { padding: 6px 10px; font-size: 14px; }
+  .btn.ok { background: var(--ok); border-color: var(--ok); }
+  .btn.bad { background: var(--bad); border-color: var(--bad); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .big { width: 100%; padding: 22px; font-size: 22px; border-radius: 16px; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--cream-2); color: var(--olive); }
+  .pill.ok { background: #e3f1e7; color: var(--ok); } .pill.warn { background: #fbf0dc; color: var(--warn); }
+  .pill.bad { background: #f8e1df; color: var(--bad); } .pill.info { background: #e1ecf6; color: var(--info); }
+  .tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); margin: 8px 0 4px; }
+  .tabs button { background: none; border: none; padding: 10px 12px; color: var(--muted); font-weight: 600; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; }
+  .tabs button.on { color: var(--olive); border-bottom-color: var(--olive); }
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--line); display: flex; z-index: 20; }
+  .bottom-nav button { flex: 1; background: none; border: none; padding: 10px 4px 12px; color: var(--muted); font-weight: 600; font-size: 14px; }
+  .bottom-nav button.on { color: var(--olive); }
+  .bottom-nav i { display: block; font-style: normal; font-size: 20px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: var(--cream-2); color: var(--olive); font-weight: 600; position: sticky; top: 0; }
+  .tscroll { overflow: auto; max-height: 70vh; border: 1px solid var(--line); border-radius: 10px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+  .stat { background: var(--cream-2); border-radius: 12px; padding: 10px 12px; }
+  .stat b { display: block; font-size: 22px; color: var(--olive); }
+  .stat span { font-size: 13px; color: var(--muted); }
+  .toast { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 12px 18px;
+    border-radius: 12px; z-index: 99; max-width: 90vw; box-shadow: 0 6px 24px rgba(0,0,0,.2); display: none; }
+  .toast.bad { background: var(--bad); } .toast.ok { background: var(--ok); }
+  .loading { position: fixed; inset: 0; background: rgba(251,247,238,.75); display: none; align-items: center; justify-content: center; z-index: 98; font-weight: 600; color: var(--olive); }
+  .clock { font-size: 44px; font-weight: 700; color: var(--olive); letter-spacing: 1px; text-align: center; }
+  .center { text-align: center; }
+  /* ภาพร้าน (img/) — ใช้เป็นภาพประกอบ ไม่บังข้อมูล */
+  .hero { height: 150px; border-radius: var(--radius); background: var(--cream-2) center/cover no-repeat; margin: 12px 0; }
+  .hero.sign { background-image: url('photo-sign.jpg'); background-position: center 45%; }
+  .hero.shower { background-image: url('photo-shower.jpg'); height: 120px; }
+  .hero.pool { background-image: url('photo-pool.jpg'); height: 120px; margin: -16px -16px 14px; border-radius: var(--radius) var(--radius) 0 0; }
+  .photo-card { position: relative; overflow: hidden; border: none; color: var(--cream); background: var(--olive) center/cover no-repeat; min-height: 200px;
+    display: flex; flex-direction: column; justify-content: flex-end; }
+  .photo-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(42,47,28,.05) 0%, rgba(42,47,28,.35) 40%, rgba(42,47,28,.82) 100%); }
+  .photo-card > * { position: relative; }
+  .photo-card .muted, .photo-card h3, .photo-card a.muted { color: var(--cream); }
+  .photo-card .muted { opacity: .9; }
+  .photo-card .bigtime { color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,.25); }
+  .photo-card .btn { background: var(--cream); color: var(--olive-3); border-color: var(--cream); }
+  .photo-card.tubs { background-image: url('photo-tubs.jpg'); }
+  .photo-card.sauna { background-image: url('photo-sauna.jpg'); }
+  .photo-card.pool { background-image: url('photo-pool.jpg'); background-position: center 70%; min-height: 170px; }
+  .hide { display: none !important; }
+  .notice { background: #fbf0dc; border: 1px solid #efd9a8; color: #7a5410; border-radius: 12px; padding: 12px; margin: 10px 0; }
+  .c-OK { background: #e3f1e7; } .c-LATE { background: #fbf0dc; } .c-ABS { background: #f8e1df; } .c-OFF { background: #f1efe8; color: #aaa; }
+  .c-OFFW { background: #e1ecf6; } .c-VAC, .c-PER, .c-SICK, .c-COMP { background: #efe6f7; } .c-WAIT { background: #fff; } .c-NA, .c-FUT { background: #fff; color: #bbb; }
+</style>
+
+  <style>
+    .rep td, .rep th { padding: 4px 5px; font-size: 12.5px; text-align: center; white-space: nowrap; }
+    .rep td:first-child, .rep th:first-child { position: sticky; left: 0; background: #fff; text-align: left; z-index: 2; }
+    .rep th:first-child { background: var(--cream-2); z-index: 3; }
+    .rep th.off { color: #aaa; } .rep th.hol { color: var(--bad); }
+    .kv { display: grid; grid-template-columns: minmax(180px, 260px) 1fr; gap: 6px 12px; align-items: center; }
+    .kv .d { font-size: 13px; color: var(--muted); }
+    .sec { margin-top: 18px; font-weight: 700; color: var(--olive); border-bottom: 1px solid var(--line); padding-bottom: 4px; grid-column: 1 / -1; }
+    @media (max-width: 640px) { .kv { grid-template-columns: 1fr; } }
+    .thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; background: var(--cream-2); cursor: pointer; display: block; }
+    .flag { color: var(--bad); font-size: 13px; }
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 97; padding: 16px; }
+    .modal img { max-width: 100%; max-height: 80vh; border-radius: 12px; }
+    .slip { max-width: 640px; margin: 0 auto; background: #fff; padding: 24px; border: 1px solid var(--line); border-radius: 12px; }
+    @media print { header.top, .tabs, .noprint { display: none !important; } .slip { border: none; } body { background: #fff; } }
+  </style>
+</head>
+<body>
+  <header class="top"><div class="in"><b><span class="brand">sumbai</span> · ผู้ดูแล</b><small id="hdr"></small></div></header>
+  <div class="loading" id="loading">กำลังโหลด…</div>
+  <div class="toast" id="toast"></div>
+
+  <div class="wrap" id="vLogin">
+    <div class="hero sign" role="img" aria-label="ป้ายร้าน sumbai"></div>
+    <div class="card">
+      <h3>เข้าสู่หน้าผู้ดูแล</h3>
+      <div id="lineLoginBox" class="hide">
+        <button class="btn big" onclick="lineLogin()">เข้าด้วย LINE</button>
+        <p class="muted" id="lineLoginMsg"></p>
+        <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
+      </div>
+      <label>รหัสผู้ดูแล</label>
+      <input id="pass" type="password" onkeydown="if(event.key==='Enter')login()">
+      <div style="height:12px"></div>
+      <button class="btn big ghost" onclick="login()">เข้าด้วยรหัส</button>
+      <p class="muted" id="passHint">รหัสอยู่ในชีต Config → ADMIN_PASSCODE</p>
+      <div id="regAdminBox" class="hide"><div style="height:8px"></div><button class="btn sm ghost" onclick="registerAdminLine()">ลงทะเบียน LINE นี้เป็นผู้ดูแล (ใช้รหัสด้านบน)</button></div>
+    </div>
+  </div>
+
+  <div class="wrap wide hide" id="vApp">
+    <div class="tabs noprint" id="tabs">
+      <button data-p="tToday" class="on">วันนี้</button>
+      <button data-p="tAtt">บันทึกเวลา</button>
+      <button data-p="tEmp">พนักงาน</button>
+      <button data-p="tAppr">อนุมัติ / บันทึกแทน</button>
+      <button data-p="tRep">รายงาน</button>
+      <button data-p="tPay">เงินเดือน & สลิป</button>
+      <button data-p="tHol">วันหยุด</button>
+      <button data-p="tSet">ตั้งค่า</button>
+    </div>
+
+    <!-- TODAY -->
+    <section id="tToday">
+      <div class="row" style="align-items:flex-start">
+        <div class="card" style="flex:2 1 420px">
+          <h3>สถานะวันนี้ <span class="muted" id="todayLbl"></span></h3>
+          <div class="grid" id="todayStat" style="margin-bottom:10px"></div>
+          <div class="tscroll"><table><thead><tr><th>พนักงาน</th><th>สถานะ</th><th>เข้า</th><th>ออก</th><th>หมายเหตุ</th></tr></thead><tbody id="todayBody"></tbody></table></div>
+        </div>
+        <div class="card" style="flex:1 1 320px">
+          <h3>⚠️ รายการติดธงรอตรวจ (30 วัน)</h3>
+          <div id="flagList" class="muted">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ATTENDANCE LOG -->
+    <section id="tAtt" class="hide">
+      <div class="card">
+        <div class="row" style="max-width:760px">
+          <div><label>ตั้งแต่</label><input type="date" id="attFrom"></div>
+          <div><label>ถึง</label><input type="date" id="attTo"></div>
+          <div><label>แสดง</label><select id="attOnly"><option value="">ทั้งหมด</option><option value="1">เฉพาะติดธง</option></select></div>
+          <div style="align-self:flex-end"><button class="btn" onclick="loadAtt()">ค้นหา</button></div>
+        </div>
+        <p class="muted">แตะรูปเพื่อขยาย · รูปลบอัตโนมัติตามจำนวนวันใน PHOTO_RETENTION_DAYS · แถวสีแดง = ติดธงยังไม่ตรวจ</p>
+      </div>
+      <div class="card"><div class="tscroll" id="attTable"><p class="muted">เลือกช่วงวันแล้วกด "ค้นหา"</p></div></div>
+    </section>
+
+    <!-- EMPLOYEES -->
+    <section id="tEmp" class="hide">
+      <div class="card">
+        <h3 id="empFormTitle">เพิ่มพนักงาน</h3>
+        <input type="hidden" id="eId">
+        <div class="row">
+          <div><label>ชื่อ-นามสกุล *</label><input id="eName"></div>
+          <div><label>ชื่อเล่น</label><input id="eNick"></div>
+          <div><label>ตำแหน่ง</label><input id="ePos"></div>
+        </div>
+        <div class="row">
+          <div><label>วันเริ่มงาน *</label><input type="date" id="eStart" oninput="probPreview()"></div>
+          <div><label>วันผ่านโปร (อัตโนมัติ)</label><input id="eProb" disabled></div>
+          <div><label>วันลาออก (วันแรกที่ไม่ได้ทำงาน)</label><input type="date" id="eResign"></div>
+        </div>
+        <div class="row">
+          <div><label>เงินเดือน (บาท)</label><input type="number" id="eSal" min="0"></div>
+          <div><label>หักประกันสังคม</label><select id="eSso"><option value="1">หัก</option><option value="0">ไม่หัก</option></select></div>
+          <div><label>รหัสพนักงาน</label><input id="eCode" disabled placeholder="สร้างอัตโนมัติ เช่น E001"></div>
+        </div>
+        <div class="row">
+          <div><label>โควต้าพักร้อน (ว่าง = ค่ามาตรฐาน)</label><input type="number" id="eQV" min="0"></div>
+          <div><label>โควต้าลากิจ</label><input type="number" id="eQP" min="0"></div>
+          <div><label>โควต้าลาป่วย</label><input type="number" id="eQS" min="0"></div>
+        </div>
+        <label>หมายเหตุ</label><input id="eNote">
+        <div style="height:12px"></div>
+        <div class="row">
+          <button class="btn" onclick="saveEmp()">บันทึก</button>
+          <button class="btn ghost" onclick="clearEmp()">ล้างฟอร์ม / เพิ่มคนใหม่</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>รายชื่อพนักงาน</h3>
+        <div class="tscroll"><table><thead><tr><th>รหัส</th><th>ชื่อ</th><th>ตำแหน่ง</th><th>เริ่มงาน</th><th>ผ่านโปร</th><th>สถานะ</th><th>เงินเดือน</th><th>พักร้อน</th><th>ลากิจ</th><th>ลาป่วย</th><th>ชดเชย</th><th>LINE</th><th></th></tr></thead><tbody id="empBody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- APPROVALS -->
+    <section id="tAppr" class="hide">
+      <div class="card"><h3>ลงทะเบียน LINE รออนุมัติ</h3><div id="pendReg"></div></div>
+      <div class="card"><h3>คำขอเอกสาร</h3><div id="docReq"></div></div>
+      <div class="card"><h3>คำขอลารออนุมัติ</h3><div id="pendLv"></div></div>
+      <div class="card"><h3>OT รออนุมัติ</h3><div id="pendOt"></div></div>
+      <div class="row" style="align-items:flex-start">
+        <div class="card" style="flex:1 1 360px">
+          <h3>ลงเวลาแทน (manual)</h3>
+          <p class="muted">เช่น ลืมลงเวลาเข้า หรืออยู่ OT แต่ลืมกดออก (ใช้แทนเวลาออกอัตโนมัติได้ และระบบคิด OT ให้) — เพิ่มเป็นรายการใหม่พร้อมเหตุผล ไม่แก้ข้อมูลเดิม</p>
+          <label>พนักงาน</label><select id="mEmp" class="empSel"></select>
+          <div class="row">
+            <div><label>วันที่</label><input type="date" id="mDate"></div>
+            <div><label>ประเภท</label><select id="mType"><option value="OUT">ออกงาน</option><option value="IN">เข้างาน</option></select></div>
+            <div><label>เวลา</label><input type="time" id="mTime"></div>
+          </div>
+          <label>เหตุผล *</label><input id="mReason">
+          <div style="height:10px"></div><button class="btn" onclick="manualClock()">บันทึก</button>
+        </div>
+        <div class="card" style="flex:1 1 360px">
+          <h3>บันทึกการลาแทนพนักงาน</h3>
+          <p class="muted">อนุมัติทันที (ใช้กรณีพนักงานลาป่วยแล้วไม่ได้กดในระบบ)</p>
+          <label>พนักงาน</label><select id="aEmp" class="empSel"></select>
+          <div class="row">
+            <div><label>ประเภท</label><select id="aType"><option value="SICK">ลาป่วย</option><option value="PER">ลากิจ</option><option value="VAC">ลาพักร้อน</option><option value="COMP">ใช้วันหยุดชดเชย</option></select></div>
+            <div><label>ตั้งแต่</label><input type="date" id="aFrom"></div>
+            <div><label>ถึง</label><input type="date" id="aTo"></div>
+          </div>
+          <label>เหตุผล</label><input id="aReason">
+          <div style="height:10px"></div><button class="btn" onclick="adminLeave()">บันทึกการลา</button>
+        </div>
+      </div>
+      <div class="card"><h3>ประวัติการลาล่าสุด</h3><div id="recentLv"></div></div>
+      <div class="card"><h3>หมายเหตุพนักงานล่าสุด</h3><div id="recentNt"></div></div>
+    </section>
+
+    <!-- REPORT -->
+    <section id="tRep" class="hide">
+      <div class="card">
+        <div class="row" style="max-width:640px">
+          <div><label>เดือน</label><input type="month" id="repMonth"></div>
+          <div style="align-self:flex-end"><button class="btn" onclick="loadReport()">ดูรายงาน</button></div>
+          <div style="align-self:flex-end"><button class="btn ghost" onclick="exportReport()">ส่งออกเป็นชีต</button></div>
+        </div>
+      </div>
+      <div class="card"><h3>สรุปรายเดือน</h3><div class="tscroll" id="repSum"><p class="muted">เลือกเดือนแล้วกด "ดูรายงาน"</p></div></div>
+      <div class="card"><h3>รายวัน</h3>
+        <p class="muted">✓ มา · สาย = มาสาย (นาที) · ✗ ขาด · พ = พักร้อน · ก = ลากิจ · ป = ลาป่วย · ช = หยุดชดเชย · ★ = มาวันหยุด · – = วันหยุด · ! = ไม่มีเวลาออก · 🎌 = นักขัตฤกษ์</p>
+        <div class="tscroll" id="repGrid"></div></div>
+    </section>
+
+    <!-- PAYROLL -->
+    <section id="tPay" class="hide">
+      <div class="card">
+        <div class="row">
+          <div><label>งวดเดือน</label><input type="month" id="payMonth"></div>
+          <div style="align-self:flex-end"><button class="btn" onclick="runPayroll()">1) คำนวณเงินเดือน</button></div>
+          <div style="align-self:flex-end"><button class="btn ghost" onclick="loadPayroll()">ดูข้อมูลที่คำนวณไว้</button></div>
+          <div style="align-self:flex-end"><button class="btn ghost" onclick="closePayroll()">2) ปิดงวด</button></div>
+          <div style="align-self:flex-end"><button class="btn ghost" onclick="makeSlips()">3) สร้างสลิป PDF ทั้งหมด</button></div>
+        </div>
+        <p class="muted">คำนวณจากเวลาทำงานจริง: ขาดงาน / มาสาย / ลา / OT ที่อนุมัติแล้ว / ทำงานวันหยุด · ช่อง "(กรอกเอง)" แก้ในชีต Payroll ได้ ยอดรวมจะอัปเดตเอง แล้วค่อยสร้างสลิป · ปิดงวดแล้วพนักงานจะเห็นสรุปในหน้าประวัติ</p>
+        <div id="payWarn"></div>
+      </div>
+      <div class="card"><div class="tscroll" id="payTable"><p class="muted">—</p></div></div>
+      <div id="slipBox" class="hide">
+        <div class="row noprint" style="margin:8px 0"><button class="btn sm" onclick="window.print()">พิมพ์สลิปนี้</button><button class="btn sm ghost" onclick="$('slipBox').classList.add('hide')">ปิด</button></div>
+        <div class="slip" id="slip"></div>
+      </div>
+    </section>
+
+    <!-- HOLIDAYS -->
+    <section id="tHol" class="hide">
+      <div class="card">
+        <h3>วันหยุดนักขัตฤกษ์ (อ้างอิงวันหยุดธนาคาร)</h3>
+        <p class="muted">ติ๊ก ✓ = ใช้เป็นวันหยุดบริษัท (ตามนโยบาย 13 วัน/ปี) · ร้านเปิดตามปกติ พนักงานต้องมาทำงาน และได้ "วันหยุดชดเชย" 1 วัน ใช้ภายใน 60 วัน</p>
+        <div id="holCount" class="muted"></div>
+        <div class="tscroll"><table><thead><tr><th>ใช้</th><th>วันที่</th><th>ชื่อวันหยุด</th><th></th></tr></thead><tbody id="holBody"></tbody></table></div>
+        <div style="height:10px"></div>
+        <div class="row"><button class="btn ghost" onclick="addHol()">+ เพิ่มวันหยุด</button><button class="btn" onclick="saveHol()">บันทึกวันหยุด</button></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="tSet" class="hide">
+      <div class="card">
+        <h3>ตั้งค่าระบบ</h3>
+        <div class="kv" id="setForm"></div>
+        <div style="height:14px"></div>
+        <div class="row">
+          <button class="btn" onclick="saveSettings()">บันทึกการตั้งค่า</button>
+          <button class="btn ghost" onclick="useMyLocation()">📍 ใช้ตำแหน่งปัจจุบันเป็นพิกัดร้าน</button>
+          <button class="btn ghost" onclick="verify()">🔒 ตรวจสอบว่าข้อมูลลงเวลาถูกแก้ไขหรือไม่</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+  let TOK = null, DATA = null, PAY = [], HOL = [];
+  const SET_GROUPS = [
+    ['เวลาทำงาน & OT', ['WORK_START', 'WORK_END', 'LATE_GRACE_MIN', 'WEEKLY_OFF', 'AUTO_CLOCKOUT', 'OT_START_AFTER_MIN', 'OT_UNIT_MIN', 'OT_AUTO_APPROVE', 'SYSTEM_START_DATE']],
+    ['พื้นที่ & รูปถ่าย', ['SHOP_LAT', 'SHOP_LNG', 'GEOFENCE_RADIUS_M', 'ACCURACY_FLAG_M', 'PHOTO_REQUIRED', 'PHOTO_RETENTION_DAYS', 'FACE_VERIFY']],
+    ['ทดลองงาน & วันลา', ['PROBATION_DAYS', 'QUOTA_VACATION', 'QUOTA_PERSONAL', 'QUOTA_SICK', 'LEAVE_APPROVAL_OVER_DAYS', 'SICK_BACKDATE_DAYS', 'COMP_EXPIRE_DAYS', 'COMP_FOR_HOLIDAY_ON_OFFDAY']],
+    ['การแจ้งเตือน LINE & PDPA', ['PUSH_EMPLOYEE_UPDATES', 'PUSH_ADMIN_ALERTS', 'PUSH_DAILY_SUMMARY', 'PDPA_VERSION', 'PDPA_EFFECTIVE_DATE', 'PDPA_CONTACT_EMAIL', 'PDPA_CONTACT_PHONE', 'ADMIN_PASSCODE']],
+    ['เงินเดือน', ['WORK_HOURS_PER_DAY', 'PAY_DAYS_DIVISOR', 'OT_RATE', 'OT_HOLIDAY_RATE', 'OFFDAY_WORK_RATE', 'ABSENT_DEDUCT', 'LATE_DEDUCT_MODE', 'ATTENDANCE_BONUS', 'ATTENDANCE_BONUS_MAX_LATE', 'SSO_RATE_PCT', 'SSO_WAGE_MIN', 'SSO_WAGE_MAX']],
+    ['ลิงก์ระบบ & ข้อมูลร้าน', ['SITE_URL', 'LIFF_ID', 'WEB_APP_URL', 'SHOP_NAME', 'LINE_OA_NAME', 'COMPANY_NAME']]
+  ];
+  const SYM = { OK: '✓', LATE: 'สาย', ABS: '✗', VAC: 'พ', PER: 'ก', SICK: 'ป', COMP: 'ช', OFFW: '★', OFF: '–', WAIT: '·', FUT: '', NA: '' };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function toast(msg, kind) { const t = $('toast'); t.textContent = msg; t.className = 'toast ' + (kind || ''); t.style.display = 'block'; clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', kind === 'bad' ? 7000 : 3500); }
+  function busy(on, txt) { $('loading').style.display = on ? 'flex' : 'none'; $('loading').textContent = txt || 'กำลังทำงาน…'; }
+  const CFG = window.SUMBAI_CONFIG || {};
+  function callApi(fn, args) {
+    return fetch(CFG.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args }) })
+      .catch(() => { throw new Error('เชื่อมต่อระบบไม่ได้ — ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'); })
+      .then(r => { if (!r.ok) throw new Error('ระบบไม่ตอบสนอง (' + r.status + ') ลองใหม่อีกครั้ง'); return r.json(); })
+      .then(j => { if (!j.ok) throw new Error(j.error); return j.data; });
+  }
+  function run(fn, ...args) {
+    return callApi(fn, args).catch(err => {
+      const m = ((err && err.message) || String(err)).replace(/^.*?Error: /, '');
+      if (m.indexOf('AUTH:') >= 0) { try { sessionStorage.removeItem('sb_adm'); } catch (e) {} $('vApp').classList.add('hide'); $('vLogin').classList.remove('hide'); }
+      throw new Error(m.replace('AUTH: ', ''));
+    });
+  }
+  async function act(txt, fn) { busy(true, txt); try { return await fn(); } catch (e) { toast(e.message, 'bad'); } finally { busy(false); } }
+  function thDate(ds) { if (!ds) return ''; const p = String(ds).split('-'); return +p[2] + '/' + +p[1] + '/' + (+p[0] + 543); }
+  function fmt(n) { return Number(n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function copy(t) { navigator.clipboard ? navigator.clipboard.writeText(t).then(() => toast('คัดลอกแล้ว', 'ok'), () => prompt('คัดลอกลิงก์นี้', t)) : prompt('คัดลอกลิงก์นี้', t); }
+  function pill(s) { const k = /สาย|รอ/.test(s) ? 'warn' : /ไม่อนุมัติ|ขาด|ลาออก|ยกเลิก|ระงับ/.test(s) ? 'bad' : /ปกติ|อนุมัติ|มา$|ตรงเวลา|พร้อมรับ|ใช้งาน/.test(s) ? 'ok' : 'info'; return `<span class="pill ${k}">${esc(s)}</span>`; }
+  function addDays(ds, n) { const d = new Date(ds + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+
+  async function login() {
+    await act('กำลังเข้าสู่ระบบ…', async () => { TOK = await run('adminLogin', $('pass').value); try { sessionStorage.setItem('sb_adm', TOK); } catch (e) {} await reload(); });
+  }
+  async function reload() {
+    DATA = await run('adminGetAll', TOK);
+    $('vLogin').classList.add('hide'); $('vApp').classList.remove('hide');
+    renderAll();
+  }
+
+  document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+    ['tToday', 'tAtt', 'tEmp', 'tAppr', 'tRep', 'tPay', 'tHol', 'tSet'].forEach(id => $(id).classList.toggle('hide', id !== b.dataset.p));
+  });
+
+  function renderAll() {
+    const D = DATA;
+    $('hdr').textContent = 'วันนี้ ' + D.dow + ' ' + thDate(D.today);
+    // today
+    const act_ = D.employees.filter(e => e.status !== 'ลาออก');
+    const c = k => act_.filter(e => e.today.code === k).length;
+    $('todayLbl').textContent = thDate(D.today);
+    $('todayStat').innerHTML = [['มาแล้ว', c('OK') + c('LATE') + c('OFFW')], ['สาย', c('LATE')], ['ยังไม่ลงเวลา', c('WAIT')], ['ลา', c('VAC') + c('PER') + c('SICK') + c('COMP')], ['หยุด', c('OFF')]]
+      .map(x => `<div class="stat"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('');
+    $('todayBody').innerHTML = act_.map(e => `<tr class="c-${e.today.code}"><td>${esc(e.name)}${e.nick ? ' (' + esc(e.nick) + ')' : ''}</td><td>${esc(e.today.label)}${e.today.code === 'LATE' ? ' ' + e.today.lateMin + ' น.' : ''}</td><td>${e.today.in}</td><td>${e.today.out}</td><td class="muted">${esc(e.today.remarks)}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">ยังไม่มีพนักงาน</td></tr>';
+    $('flagList').innerHTML = D.flagged.length ? '<table>' + D.flagged.map(r => `<tr><td>${thDate(r.ds)} ${esc(r.time.slice(0, 5))}<div class="muted">${r.type === 'IN' ? 'เข้า' : 'ออก'}</div></td><td>${esc(r.name)}<div class="flag">${esc(r.flag)}</div></td>
+      <td style="white-space:nowrap">${r.photo ? `<button class="btn sm ghost" onclick="showPhoto('${esc(r.photo)}')">รูป</button> ` : ''}<button class="btn sm" onclick="review('${r.ref}')">ตรวจแล้ว</button></td></tr>`).join('') + '</table>' : '<p class="muted">ไม่มีรายการ</p>';
+    $('pendReg').innerHTML = D.pendingRegs.length ? '<table><tr><th>รหัส</th><th>ชื่อ</th><th>ชื่อใน LINE</th><th>ลงทะเบียนเมื่อ</th><th></th></tr>' + D.pendingRegs.map(e =>
+      `<tr><td>${esc(e.id)}</td><td>${esc(e.name)}</td><td>${esc(e.lineName)}</td><td class="muted">${esc(String(e.regAt).replace('T', ' ').slice(0, 16))}</td>
+      <td style="white-space:nowrap"><button class="btn sm ok" onclick="setLine('${e.id}','ใช้งาน')">อนุมัติ</button> <button class="btn sm bad" onclick="unbind('${e.id}')">ปฏิเสธ</button></td></tr>`).join('') + '</table>' : '<p class="muted">ไม่มีรายการ</p>';
+    if (!$('attFrom').value) { $('attFrom').value = addDays(D.today, -6); $('attTo').value = D.today; }
+    // employees
+    $('empBody').innerHTML = D.employees.map(e => `<tr><td>${esc(e.id)}</td><td>${esc(e.name)}${e.nick ? '<div class="muted">' + esc(e.nick) + '</div>' : ''}</td><td>${esc(e.position)}</td>
+      <td>${thDate(e.start)}</td><td>${thDate(e.probEnd)}</td><td>${pill(e.status)}${e.resign ? '<div class="muted">ออก ' + thDate(e.resign) + '</div>' : ''}</td><td>${fmt(e.salary)}</td>
+      <td>${e.bal.VAC.left}/${e.bal.VAC.quota}</td><td>${e.bal.PER.left}/${e.bal.PER.quota}</td><td>${e.bal.SICK.left}/${e.bal.SICK.quota}</td><td>${e.bal.COMP.left}</td>
+      <td>${lineCell(e)}</td>
+      <td style="white-space:nowrap"><button class="btn sm" onclick="editEmp('${e.id}')">แก้ไข</button> <button class="btn sm bad" onclick="delEmp('${e.id}')">ลบ</button></td></tr>`).join('');
+    $$('.empSel').forEach(s => s.innerHTML = act_.map(e => `<option value="${esc(e.id)}">${esc(e.name)}${e.nick ? ' (' + esc(e.nick) + ')' : ''}</option>`).join(''));
+    // approvals
+    $('pendLv').innerHTML = D.pendingLeaves.length ? '<table><tr><th>พนักงาน</th><th>ประเภท</th><th>วันที่</th><th>วัน</th><th>เหตุผล</th><th></th></tr>' + D.pendingLeaves.map(l =>
+      `<tr><td>${esc(l.name)}</td><td>${esc(l.typeLabel)}</td><td>${thDate(l.from)}–${thDate(l.to)}</td><td>${l.days}</td><td>${esc(l.reason)}</td>
+      <td style="white-space:nowrap"><button class="btn sm ok" onclick="decLv('${l.id}',true)">อนุมัติ</button> <button class="btn sm bad" onclick="decLv('${l.id}',false)">ไม่อนุมัติ</button></td></tr>`).join('') + '</table>' : '<p class="muted">ไม่มีรายการ</p>';
+    $('pendOt').innerHTML = D.pendingOT.length ? '<table><tr><th>พนักงาน</th><th>วันที่งาน</th><th>OT</th><th>รายละเอียด</th><th></th></tr>' + D.pendingOT.map(n =>
+      `<tr><td>${esc(n.name)}</td><td>${thDate(n.ds)}</td><td>${n.ot} ชม.</td><td>${esc(n.text)}</td>
+      <td style="white-space:nowrap"><button class="btn sm ok" onclick="decOt('${n.id}',true)">อนุมัติ</button> <button class="btn sm bad" onclick="decOt('${n.id}',false)">ไม่อนุมัติ</button></td></tr>`).join('') + '</table>' : '<p class="muted">ไม่มีรายการ</p>';
+    $('recentLv').innerHTML = '<div class="tscroll"><table><tr><th>พนักงาน</th><th>ประเภท</th><th>วันที่</th><th>วัน</th><th>สถานะ</th><th>ผู้อนุมัติ</th><th></th></tr>' + D.recentLeaves.map(l =>
+      `<tr><td>${esc(l.name)}</td><td>${esc(l.typeLabel)}</td><td>${thDate(l.from)}–${thDate(l.to)}</td><td>${l.days}</td><td>${pill(l.status)}</td><td class="muted">${esc(l.approver)}</td>
+      <td>${l.status === 'อนุมัติ' ? `<button class="btn sm ghost" onclick="decLv('${l.id}','cancel')">ยกเลิก</button>` : ''}</td></tr>`).join('') + '</table></div>';
+    $('recentNt').innerHTML = '<div class="tscroll"><table><tr><th>บันทึกเมื่อ</th><th>พนักงาน</th><th>วันที่งาน</th><th>หมายเหตุ</th><th>OT</th></tr>' + D.recentNotes.map(n =>
+      `<tr><td class="muted">${esc(n.ts.replace('T', ' ').slice(0, 16))}</td><td>${esc(n.name)}</td><td>${thDate(n.ds)}</td><td>${esc(n.text)}</td><td>${n.ot ? n.ot + ' ชม. ' + pill(n.otStatus) + (n.otStatus === 'อนุมัติ' ? ` <button class="btn sm ghost" onclick="decOt('${n.id}',false)">ไม่อนุมัติ</button>` : '') : ''}</td></tr>`).join('') + '</table></div>';
+    const dr = D.docRequests;
+    $('docReq').innerHTML = dr.length ? '<div class="tscroll"><table><tr><th>ขอเมื่อ</th><th>พนักงาน</th><th>เอกสาร</th><th>ใช้เพื่อ</th><th>สถานะ</th><th></th></tr>' + dr.map(d =>
+      `<tr><td class="muted">${esc(d.ts.replace('T', ' ').slice(0, 16))}</td><td>${esc(d.name)}</td><td>${esc(d.typeLabel)}${d.month ? ' ' + esc(d.month) : ''}</td><td>${esc(d.purpose)}</td>
+      <td>${pill(d.status)}${d.link ? ` <a href="${esc(d.link)}" target="_blank">ลิงก์</a>` : ''}${d.adminNote ? '<div class="muted">' + esc(d.adminNote) + '</div>' : ''}</td>
+      <td style="white-space:nowrap">${d.status === 'รอดำเนินการ' ? (d.typeLabel === 'สลิปเงินเดือน' ? `<button class="btn sm ok" onclick="slipDoc('${d.id}')">สร้างสลิป & ส่ง</button> ` : '')
+        + `<button class="btn sm" onclick="doneDoc('${d.id}')">แนบลิงก์ / เสร็จ</button> <button class="btn sm bad" onclick="rejectDoc('${d.id}')">ไม่อนุมัติ</button>` : ''}</td></tr>`).join('') + '</table></div>' : '<p class="muted">ยังไม่มีคำขอ</p>';
+    ['mDate', 'aFrom', 'aTo'].forEach(id => { if (!$(id).value) $(id).value = D.today; });
+    if (!$('repMonth').value) $('repMonth').value = D.today.slice(0, 7);
+    if (!$('payMonth').value) { const d = new Date(D.today + 'T00:00:00Z'); d.setUTCDate(0); $('payMonth').value = d.toISOString().slice(0, 7); }
+    // holidays
+    HOL = D.holidays.map(h => Object.assign({}, h)); renderHol();
+    // settings
+    let html = '';
+    SET_GROUPS.forEach(g => {
+      html += `<div class="sec">${g[0]}</div>`;
+      g[1].forEach(k => { const s = D.settings[k] || { value: '', desc: '' };
+        html += `<div><b style="font-size:14px">${k}</b><div class="d">${esc(s.desc)}</div></div><input data-k="${k}" value="${esc(s.value)}">`; });
+    });
+    $('setForm').innerHTML = html;
+  }
+  function $$(q) { return Array.from(document.querySelectorAll(q)); }
+
+  function lineCell(e) {
+    if (!e.linked) return '<span class="muted">ยังไม่ลงทะเบียน</span>';
+    const st = pill(e.lineStatus || '-');
+    const btns = e.lineStatus === 'ใช้งาน' ? `<button class="btn sm ghost" onclick="setLine('${e.id}','ระงับ')">ระงับ</button>`
+      : `<button class="btn sm ok" onclick="setLine('${e.id}','ใช้งาน')">${e.lineStatus === 'ระงับ' ? 'เปิดใช้' : 'อนุมัติ'}</button>`;
+    return `${st}<div class="muted">${esc(e.lineName)}</div><div style="white-space:nowrap;margin-top:4px">${btns} <button class="btn sm ghost" onclick="unbind('${e.id}')">ยกเลิกการผูก</button></div>`;
+  }
+  async function setLine(id, st) { await act('กำลังบันทึก…', async () => { await run('adminSetLineStatus', TOK, id, st); toast('บันทึกแล้ว — แจ้งพนักงานทาง LINE แล้ว', 'ok'); await reload(); }); }
+  async function unbind(id) {
+    if (!confirm('ยกเลิกการผูก LINE ของ ' + id + '? พนักงานต้องลงทะเบียนใหม่')) return;
+    await act('กำลังบันทึก…', async () => { await run('adminUnbindLine', TOK, id); toast('ยกเลิกการผูกแล้ว', 'ok'); await reload(); });
+  }
+  // ---------- attendance log ----------
+  async function loadAtt() {
+    await act('กำลังโหลด…', async () => {
+      const rows = await run('adminAttendance', TOK, $('attFrom').value, $('attTo').value, !!$('attOnly').value);
+      $('attTable').innerHTML = rows.length ? '<table><tr><th>วันเวลา</th><th>พนักงาน</th><th>ประเภท</th><th>สถานะ</th><th>ระยะ / GPS</th><th>กล้อง / อุปกรณ์</th><th>รูป</th><th>ธง / ผลตรวจ</th></tr>' + rows.map(r =>
+        `<tr style="${r.flag && !r.review ? 'background:#f8e1df' : ''}"><td>${thDate(r.ds)}<br><b>${esc(r.time.slice(0, 5))}</b><div class="muted">#${esc(r.ref)}</div></td><td>${esc(r.name)}</td><td>${r.type === 'IN' ? 'เข้า' : 'ออก'}</td>
+         <td>${pill(r.status)}${r.lateMin > 0 ? '<div class="muted">สาย ' + r.lateMin + ' น.</div>' : ''}<div class="muted">${esc(r.source)}</div></td>
+         <td>${r.dist ? r.dist + ' ม.' : '-'}${r.acc ? '<div class="muted">±' + esc(r.acc) + ' ม.</div>' : ''}${r.map ? `<a href="${esc(r.map)}" target="_blank" rel="noopener">แผนที่</a>` : ''}</td>
+         <td>${esc(r.cam)}<div class="muted" style="max-width:180px">${esc(r.device)}</div></td>
+         <td>${r.photo ? `<button class="btn sm ghost" onclick="showPhoto('${esc(r.photo)}')">ดูรูป</button>` : '-'}</td>
+         <td>${r.flag ? '<div class="flag">' + esc(r.flag) + '</div>' : ''}${r.review ? '<div class="muted">✔ ' + esc(r.review) + '</div>' : (r.flag ? `<button class="btn sm" onclick="review('${r.ref}')">ตรวจแล้ว</button>` : '')}</td></tr>`).join('') + '</table>' : '<p class="muted">ไม่มีรายการ</p>';
+    });
+  }
+  async function showPhoto(url) {
+    await act('กำลังโหลดรูป…', async () => {
+      const src = await run('adminPhoto', TOK, url);
+      const m = document.createElement('div'); m.className = 'modal'; m.onclick = () => m.remove();
+      m.innerHTML = `<img src="${src}" alt="รูปลงเวลา">`; document.body.appendChild(m);
+    });
+  }
+  async function review(ref) {
+    const res = prompt('ผลการตรวจสอบ (เช่น ดูกล้องแล้ว ปกติ / ลงเวลาแทนกันจริง)'); if (!res) return;
+    await act('กำลังบันทึก…', async () => { await run('adminReviewFlag', TOK, ref, res); toast('บันทึกผลตรวจแล้ว', 'ok'); await reload(); if (!$('tAtt').classList.contains('hide')) loadAtt(); });
+  }
+
+  // ---------- employees ----------
+  function probPreview() { const s = $('eStart').value; const p = +(DATA.settings.PROBATION_DAYS.value || 120); $('eProb').value = s ? thDate(addDays(s, p)) + ' (+' + p + ' วัน)' : ''; }
+  function clearEmp() { ['eId', 'eCode', 'eName', 'eNick', 'ePos', 'eStart', 'eResign', 'eSal', 'eQV', 'eQP', 'eQS', 'eNote', 'eProb'].forEach(id => $(id).value = ''); $('eSso').value = '1'; $('empFormTitle').textContent = 'เพิ่มพนักงาน'; }
+  function editEmp(id) {
+    const e = DATA.employees.find(x => x.id === id); if (!e) return;
+    $('eId').value = e.id; $('eName').value = e.name; $('eNick').value = e.nick; $('ePos').value = e.position; $('eStart').value = e.start; $('eResign').value = e.resign;
+    $('eSal').value = e.salary; $('eSso').value = e.sso ? '1' : '0'; $('eCode').value = e.id; $('eQV').value = e.qVac; $('eQP').value = e.qPer; $('eQS').value = e.qSick; $('eNote').value = e.note;
+    $('empFormTitle').textContent = 'แก้ไข ' + e.id + ' — ' + e.name; probPreview(); window.scrollTo(0, 0);
+  }
+  async function saveEmp() {
+    const emp = { id: $('eId').value, name: $('eName').value, nick: $('eNick').value, position: $('ePos').value, start: $('eStart').value, resign: $('eResign').value,
+      salary: $('eSal').value, sso: $('eSso').value === '1', qVac: $('eQV').value, qPer: $('eQP').value, qSick: $('eQS').value, note: $('eNote').value };
+    await act('กำลังบันทึก…', async () => { const r = await run('adminSaveEmployee', TOK, emp); toast('บันทึกแล้ว — แจ้งรหัส ' + r.id + ' ให้พนักงานใช้ลงทะเบียนใน LINE', 'ok'); clearEmp(); await reload(); });
+  }
+  async function delEmp(id) {
+    const e = DATA.employees.find(x => x.id === id);
+    if (!confirm('ลบ ' + e.name + ' ออกจากรายชื่อ?\n(ถ้าพนักงานลาออก แนะนำให้ใส่ "วันลาออก" แทนการลบ ประวัติลงเวลาเดิมจะยังเก็บไว้)')) return;
+    await act('กำลังลบ…', async () => { await run('adminDeleteEmployee', TOK, id); toast('ลบแล้ว', 'ok'); await reload(); });
+  }
+
+  // ---------- approvals ----------
+  async function decLv(id, ok) {
+    const note = ok === true ? '' : prompt(ok === 'cancel' ? 'เหตุผลที่ยกเลิก' : 'เหตุผลที่ไม่อนุมัติ (ถ้ามี)') ;
+    if (note === null) return;
+    await act('กำลังบันทึก…', async () => { await run('adminDecideLeave', TOK, id, ok, note || ''); toast('บันทึกแล้ว', 'ok'); await reload(); });
+  }
+  async function slipDoc(id) { await act('กำลังสร้างสลิป PDF…', async () => { await run('adminFulfillPayslip', TOK, id); toast('สร้างสลิปและแนบให้พนักงานแล้ว', 'ok'); await reload(); }); }
+  async function doneDoc(id) {
+    const link = prompt('ลิงก์เอกสาร (Google Drive) — เว้นว่างได้ถ้าให้เป็นกระดาษ'); if (link === null) return;
+    const note = prompt('หมายเหตุถึงพนักงาน (เช่น รับได้ที่เคาน์เตอร์วันพุธ)') || '';
+    await act('กำลังบันทึก…', async () => { await run('adminUpdateDoc', TOK, id, 'DONE', link, note); toast('บันทึกแล้ว', 'ok'); await reload(); });
+  }
+  async function rejectDoc(id) { const note = prompt('เหตุผล'); if (note === null) return; await act('กำลังบันทึก…', async () => { await run('adminUpdateDoc', TOK, id, 'REJECTED', '', note); await reload(); }); }
+  async function decOt(id, ok) { await act('กำลังบันทึก…', async () => { await run('adminDecideOT', TOK, id, ok); toast('บันทึกแล้ว', 'ok'); await reload(); }); }
+  async function manualClock() {
+    if (!$('mTime').value || !$('mReason').value.trim()) return toast('กรุณาใส่เวลาและเหตุผล', 'bad');
+    await act('กำลังบันทึก…', async () => { await run('adminManualClock', TOK, $('mEmp').value, $('mDate').value, $('mType').value, $('mTime').value, $('mReason').value); toast('บันทึกแล้ว', 'ok'); $('mReason').value = ''; await reload(); });
+  }
+  async function adminLeave() {
+    await act('กำลังบันทึก…', async () => { const r = await run('adminCreateLeave', TOK, $('aEmp').value, $('aType').value, $('aFrom').value, $('aTo').value, $('aReason').value); toast('บันทึกการลา ' + r.days + ' วัน', 'ok'); $('aReason').value = ''; await reload(); });
+  }
+
+  // ---------- report ----------
+  async function loadReport() {
+    await act('กำลังสร้างรายงาน…', async () => {
+      const R = await run('adminMonthReport', TOK, $('repMonth').value);
+      $('repSum').innerHTML = '<table><tr><th>พนักงาน</th><th>สถานะ</th><th>วันทำงาน<br>ตามตาราง</th><th>มาทำงาน</th><th>สาย<br>(ครั้ง)</th><th>สาย<br>(นาที)</th><th>ขาด</th><th>พักร้อน</th><th>ลากิจ</th><th>ลาป่วย</th><th>หยุด<br>ชดเชย</th><th>มา<br>วันหยุด</th><th>ไม่ลง<br>เวลาออก</th><th>ออกก่อน<br>(ครั้ง)</th><th>OT ปกติ</th><th>OT วันหยุด</th></tr>' +
+        R.rows.map(r => { const s = r.sum; return `<tr><td>${esc(r.name)}</td><td>${pill(r.status)}</td><td>${s.sched}</td><td>${s.present}</td><td>${s.late || ''}</td><td>${s.lateMin || ''}</td><td>${s.absent || ''}</td><td>${s.VAC || ''}</td><td>${s.PER || ''}</td><td>${s.SICK || ''}</td><td>${s.COMP || ''}</td><td>${s.offWork || ''}</td><td>${s.missOut || ''}</td><td>${s.early || ''}</td><td>${s.otNormal || ''}</td><td>${s.otHoliday || ''}</td></tr>`; }).join('') + '</table>';
+      $('repGrid').innerHTML = '<table class="rep"><tr><th>พนักงาน</th>' + R.days.map(d => `<th class="${d.off ? 'off' : ''} ${d.hol ? 'hol' : ''}" title="${esc(d.hol)}">${+d.d.slice(8)}<br>${d.dow}${d.hol ? '<br>🎌' : ''}</th>`).join('') + '</tr>' +
+        R.rows.map(r => `<tr><td>${esc(r.name)}</td>` + r.days.map(x => `<td class="c-${x.code}" title="${esc(x.label + (x.in ? ' ' + x.in + '-' + x.out : '') + (x.remarks ? ' | ' + x.remarks : ''))}">${x.code === 'LATE' ? x.lateMin + '′' : SYM[x.code]}${x.missOut ? '!' : ''}${x.manual ? '*' : ''}</td>`).join('') + '</tr>').join('') + '</table><p class="muted">ชี้เมาส์ที่ช่องเพื่อดูเวลาเข้า-ออก · * = มีการบันทึกโดยแอดมิน</p>';
+    });
+  }
+  async function exportReport() { await act('กำลังส่งออก…', async () => { const r = await run('adminExportReport', TOK, $('repMonth').value); toast('สร้างชีต "' + r.sheet + '" แล้ว', 'ok'); window.open(r.url, '_blank'); }); }
+
+  // ---------- payroll ----------
+  const PAY_COLS = ['EmpID', 'ชื่อ', 'เงินเดือน', 'วันมาทำงาน', 'มาสาย(ครั้ง)', 'ขาดงาน(วัน)', 'OT ปกติ(ชม.)', 'OT วันหยุด(ชม.)', 'เงินเดือนตามสัดส่วน', 'หักขาดงาน', 'หักมาสาย', 'ค่าล่วงเวลา', 'ค่าทำงานวันหยุด', 'เบี้ยขยัน', 'เงินได้อื่น(กรอกเอง)', 'รวมเงินได้', 'ประกันสังคม', 'ภาษีหัก ณ ที่จ่าย(กรอกเอง)', 'หักอื่นๆ(กรอกเอง)', 'เงินได้สุทธิ', 'สถานะงวด'];
+  const MONEY = /เงิน|หัก|ค่า|เบี้ย|รวม|ประกัน|ภาษี/;
+  function renderPay(rows) {
+    PAY = rows;
+    $('payTable').innerHTML = rows.length ? '<table><tr>' + PAY_COLS.map(c => `<th>${esc(c)}</th>`).join('') + '<th></th></tr>' + rows.map((r, i) => '<tr>' + PAY_COLS.map(c =>
+      `<td>${MONEY.test(c) && c !== 'ชื่อ' && typeof r[c] === 'number' ? fmt(r[c]) : esc(r[c])}</td>`).join('') + `<td style="white-space:nowrap"><button class="btn sm ghost" onclick="showSlip(${i})">ดูสลิป</button> <button class="btn sm ghost" onclick="oneSlip(${i})">PDF</button></td></tr>`).join('') + '</table>' : '<p class="muted">ยังไม่มีข้อมูลงวดนี้</p>';
+  }
+  async function runPayroll() {
+    await act('กำลังคำนวณเงินเดือน…', async () => {
+      const r = await run('adminRunPayroll', TOK, $('payMonth').value);
+      renderPay(r.rows);
+      $('payWarn').innerHTML = r.warnings.length ? '<div class="notice">⚠️ ตรวจสอบก่อนปิดงวด:<br>' + r.warnings.map(esc).join('<br>') + '</div>' : '';
+      toast('คำนวณแล้ว ' + r.rows.length + ' คน', 'ok');
+    });
+  }
+  async function loadPayroll() { await act('กำลังโหลด…', async () => { renderPay(await run('adminGetPayroll', TOK, $('payMonth').value)); }); }
+  async function closePayroll() { if (!confirm('ปิดงวด ' + $('payMonth').value + '? หลังปิดจะคำนวณใหม่ไม่ได้ (ยกเว้นแก้ในชีต)')) return; await act('กำลังปิดงวด…', async () => { await run('adminClosePayroll', TOK, $('payMonth').value); await loadPayroll(); toast('ปิดงวดแล้ว', 'ok'); }); }
+  async function makeSlips() { await act('กำลังสร้างสลิป PDF (อาจใช้เวลาสักครู่)…', async () => { const r = await run('adminMakePayslips', TOK, $('payMonth').value, ''); toast('สร้างสลิป ' + r.files.length + ' ไฟล์', 'ok'); window.open(r.folderUrl, '_blank'); }); }
+  async function oneSlip(i) { await act('กำลังสร้าง PDF…', async () => { const r = await run('adminMakePayslips', TOK, $('payMonth').value, String(PAY[i].EmpID)); window.open(r.files[0].url, '_blank'); }); }
+  function showSlip(i) {
+    const x = PAY[i], S = DATA.settings;
+    const line = (a, b) => `<tr><td>${esc(a)}</td><td style="text-align:right">${b}</td></tr>`;
+    $('slip').innerHTML = `<div class="center"><b style="font-size:20px;color:var(--olive)">${esc(S.COMPANY_NAME.value || S.SHOP_NAME.value)}</b><div>สลิปเงินเดือน ประจำเดือน ${esc(x['เดือน'])}</div></div><hr>
+      <table><tr><td>รหัส</td><td>${esc(x.EmpID)}</td><td>ชื่อ</td><td>${esc(x['ชื่อ'])}</td></tr><tr><td>ตำแหน่ง</td><td>${esc(x['ตำแหน่ง'])}</td><td>มาทำงาน</td><td>${x['วันมาทำงาน']}/${x['วันทำงานตามตาราง']} วัน</td></tr>
+      <tr><td>มาสาย</td><td>${x['มาสาย(ครั้ง)']} ครั้ง</td><td>ขาดงาน</td><td>${x['ขาดงาน(วัน)']} วัน</td></tr></table><br>
+      <table><tr><th>รายการเงินได้</th><th style="text-align:right">บาท</th></tr>${line('เงินเดือน', fmt(x['เงินเดือนตามสัดส่วน']))}${line('ค่าล่วงเวลา', fmt(x['ค่าล่วงเวลา']))}${line('ค่าทำงานวันหยุด', fmt(x['ค่าทำงานวันหยุด']))}${line('เบี้ยขยัน', fmt(x['เบี้ยขยัน']))}${line('เงินได้อื่น', fmt(x['เงินได้อื่น(กรอกเอง)']))}${line('หักขาดงาน', '-' + fmt(x['หักขาดงาน']))}${line('หักมาสาย', '-' + fmt(x['หักมาสาย']))}<tr><th>รวมเงินได้</th><th style="text-align:right">${fmt(x['รวมเงินได้'])}</th></tr></table><br>
+      <table><tr><th>รายการหัก</th><th style="text-align:right">บาท</th></tr>${line('ประกันสังคม', fmt(x['ประกันสังคม']))}${line('ภาษีหัก ณ ที่จ่าย', fmt(x['ภาษีหัก ณ ที่จ่าย(กรอกเอง)']))}${line('หักอื่นๆ', fmt(x['หักอื่นๆ(กรอกเอง)']))}<tr><th>รวมรายการหัก</th><th style="text-align:right">${fmt(x['รวมรายการหัก'])}</th></tr></table>
+      <h2 style="text-align:right;color:var(--olive)">สุทธิ ${fmt(x['เงินได้สุทธิ'])} บาท</h2><br><div class="row"><div>ลงชื่อ ........................ ผู้จ่ายเงิน</div><div>ลงชื่อ ........................ ผู้รับเงิน</div></div>`;
+    $('slipBox').classList.remove('hide'); $('slipBox').scrollIntoView();
+  }
+
+  // ---------- holidays ----------
+  function renderHol() {
+    const years = {}; HOL.filter(h => h.use).forEach(h => years[h.date.slice(0, 4)] = (years[h.date.slice(0, 4)] || 0) + 1);
+    $('holCount').textContent = 'จำนวนวันที่ใช้: ' + (Object.keys(years).map(y => (+y + 543) + ' = ' + years[y] + ' วัน').join(' · ') || '0');
+    $('holBody').innerHTML = HOL.map((h, i) => `<tr><td><input type="checkbox" ${h.use ? 'checked' : ''} onchange="HOL[${i}].use=this.checked;renderHol()" style="width:auto"></td>
+      <td><input type="date" value="${h.date}" onchange="HOL[${i}].date=this.value"></td><td><input value="${esc(h.name)}" onchange="HOL[${i}].name=this.value"></td>
+      <td><button class="btn sm ghost" onclick="HOL.splice(${i},1);renderHol()">ลบ</button></td></tr>`).join('');
+  }
+  function addHol() { HOL.push({ date: DATA.today, name: '', use: true }); renderHol(); }
+  async function saveHol() { await act('กำลังบันทึก…', async () => { await run('adminSaveHolidays', TOK, HOL); toast('บันทึกวันหยุดแล้ว', 'ok'); await reload(); }); }
+
+  // ---------- settings ----------
+  async function saveSettings() {
+    const obj = {}; $$('#setForm input').forEach(i => obj[i.dataset.k] = i.value);
+    await act('กำลังบันทึก…', async () => { const r = await run('adminSaveSettings', TOK, obj); toast(r.changed.length ? 'บันทึกแล้ว: ' + r.changed.length + ' รายการ' : 'ไม่มีการเปลี่ยนแปลง', 'ok'); await reload(); });
+  }
+  function useMyLocation() {
+    if (!navigator.geolocation) return toast('อุปกรณ์ไม่รองรับ GPS', 'bad');
+    busy(true, 'กำลังอ่านตำแหน่ง…');
+    navigator.geolocation.getCurrentPosition(p => {
+      busy(false);
+      $$('#setForm input').forEach(i => { if (i.dataset.k === 'SHOP_LAT') i.value = p.coords.latitude.toFixed(6); if (i.dataset.k === 'SHOP_LNG') i.value = p.coords.longitude.toFixed(6); });
+      toast('ได้ตำแหน่งแล้ว (±' + Math.round(p.coords.accuracy) + ' ม.) — กด "บันทึกการตั้งค่า"', 'ok');
+    }, e => { busy(false); toast('อ่านตำแหน่งไม่ได้: ' + e.message, 'bad'); }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+  }
+  async function verify() { await act('กำลังตรวจสอบ…', async () => { const r = await run('adminVerify', TOK); r.ok ? toast('✅ ข้อมูลลงเวลาครบถ้วน ไม่ถูกแก้ไข (' + r.count + ' รายการ)', 'ok') : toast('⚠️ พบการแก้ไข/ลบข้อมูล ตั้งแต่แถว ' + r.badRow + ' ของชีต Attendance', 'bad'); }); }
+
+  // ---------- เข้าระบบด้วย LINE ----------
+  let LIFF_OK = false;
+  async function initLiff() {
+    if (!window.liff || !/^\d+-\w+$/.test(CFG.LIFF_ID || '')) return false;
+    try { await liff.init({ liffId: CFG.LIFF_ID }); LIFF_OK = true; } catch (e) { return false; }
+    $('lineLoginBox').classList.remove('hide');
+    return true;
+  }
+  async function lineLogin() {
+    if (!LIFF_OK) return toast('เปิดหน้านี้จากเมนูใน LINE เพื่อเข้าด้วย LINE', 'bad');
+    if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+    await act('กำลังเข้าสู่ระบบ…', async () => {
+      try { TOK = await run('adminLoginLine', liff.getIDToken()); }
+      catch (e) { $('lineLoginMsg').textContent = e.message; $('regAdminBox').classList.remove('hide'); $('passHint').textContent = 'ใส่รหัสผู้ดูแลแล้วกดปุ่มลงทะเบียนด้านล่าง ครั้งต่อไปเข้าด้วย LINE ได้เลย'; throw e; }
+      try { sessionStorage.setItem('sb_adm', TOK); } catch (e) {}
+      await reload();
+    });
+  }
+  async function registerAdminLine() {
+    if (!LIFF_OK || !liff.isLoggedIn()) return toast('ต้องเปิดจาก LINE', 'bad');
+    await act('กำลังลงทะเบียน…', async () => { await run('registerAdmin', liff.getIDToken(), $('pass').value); toast('ลงทะเบียนผู้ดูแลแล้ว', 'ok'); await lineLogin(); });
+  }
+  (async function init() {
+    const q = new URLSearchParams(location.search);
+    let t = null; try { t = sessionStorage.getItem('sb_adm'); } catch (e) {}
+    busy(true, 'กำลังโหลด…');
+    const hasLiff = await initLiff();
+    if (t) { TOK = t; try { await reload(); } catch (e) { TOK = null; } }
+    if (!TOK && hasLiff && (liff.isInClient() || liff.isLoggedIn())) { try { await lineLogin(); } catch (e) { } }
+    busy(false);
+    const tab = q.get('tab');
+    const map = { att: 'tAtt', appr: 'tAppr', pay: 'tPay', emp: 'tEmp' };
+    if (TOK && map[tab]) document.querySelector(`#tabs button[data-p="${map[tab]}"]`).click();
+  })();
+</script>
+</body>
+</html>
