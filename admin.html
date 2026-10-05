@@ -217,14 +217,23 @@
           <div><label>ตำแหน่ง</label><input id="ePos"></div>
         </div>
         <div class="row">
+          <div><label>เบอร์โทร</label><input id="ePhone" type="tel" inputmode="tel" placeholder="เช่น 061-598-2143"></div>
+          <div><label>อีเมล</label><input id="eEmail" type="email" inputmode="email" autocapitalize="off" placeholder="name@gmail.com"></div>
+        </div>
+        <div class="row">
+          <div><label>ธนาคาร (บัญชีรับเงินเดือน)</label><input id="eBank" list="bankList" placeholder="เลือกหรือพิมพ์ชื่อธนาคาร">
+            <datalist id="bankList"><option value="กสิกรไทย (KBank)"><option value="กรุงเทพ (BBL)"><option value="ไทยพาณิชย์ (SCB)"><option value="กรุงไทย (KTB)"><option value="กรุงศรีอยุธยา (BAY)"><option value="ทหารไทยธนชาต (ttb)"><option value="ออมสิน (GSB)"><option value="ธ.ก.ส. (BAAC)"></datalist></div>
+          <div><label>เลขบัญชี</label><input id="eAcct" inputmode="numeric" placeholder="เช่น 123-3-57023-7"></div>
+        </div>
+        <div class="row">
           <div><label>วันเริ่มงาน *</label><input type="date" id="eStart" oninput="probPreview()"></div>
           <div><label>วันผ่านโปร (อัตโนมัติ)</label><input id="eProb" disabled></div>
           <div><label>วันลาออก (วันแรกที่ไม่ได้ทำงาน)</label><input type="date" id="eResign"></div>
         </div>
         <div class="row">
           <div><label>เงินเดือน (บาท)</label><input type="number" id="eSal" min="0"></div>
-          <div><label>หักประกันสังคม</label><select id="eSso"><option value="1">หัก</option><option value="0">ไม่หัก</option></select></div>
-          <div><label>รหัสพนักงาน</label><input id="eCode" disabled placeholder="สร้างอัตโนมัติ เช่น E001"></div>
+          <div><label>หักประกันสังคม</label><select id="eSso"><option value="0">ไม่หัก</option><option value="1">หัก</option></select></div>
+          <div><label>รหัสพนักงาน</label><input id="eCode" disabled placeholder="สร้างอัตโนมัติ เช่น SC001"></div>
         </div>
         <div class="row">
           <div><label>โควต้าพักร้อน (ว่าง = ค่ามาตรฐาน)</label><input type="number" id="eQV" min="0"></div>
@@ -350,7 +359,7 @@
     ['ทดลองงาน & วันลา', ['PROBATION_DAYS', 'QUOTA_VACATION', 'QUOTA_PERSONAL', 'QUOTA_SICK', 'LEAVE_APPROVAL_OVER_DAYS', 'SICK_BACKDATE_DAYS', 'COMP_EXPIRE_DAYS', 'COMP_FOR_HOLIDAY_ON_OFFDAY']],
     ['การแจ้งเตือน LINE & PDPA', ['PUSH_EMPLOYEE_UPDATES', 'PUSH_ADMIN_ALERTS', 'PUSH_DAILY_SUMMARY', 'PDPA_VERSION', 'PDPA_EFFECTIVE_DATE', 'PDPA_CONTACT_EMAIL', 'PDPA_CONTACT_PHONE', 'ADMIN_PASSCODE']],
     ['เงินเดือน', ['WORK_HOURS_PER_DAY', 'PAY_DAYS_DIVISOR', 'OT_RATE', 'OT_HOLIDAY_RATE', 'OFFDAY_WORK_RATE', 'ABSENT_DEDUCT', 'LATE_DEDUCT_MODE', 'ATTENDANCE_BONUS', 'ATTENDANCE_BONUS_MAX_LATE', 'SSO_RATE_PCT', 'SSO_WAGE_MIN', 'SSO_WAGE_MAX']],
-    ['ลิงก์ระบบ & ข้อมูลร้าน', ['SITE_URL', 'LIFF_ID', 'WEB_APP_URL', 'SHOP_NAME', 'LINE_OA_NAME', 'COMPANY_NAME']]
+    ['ลิงก์ระบบ & ข้อมูลร้าน', ['SITE_URL', 'LIFF_ID', 'WEB_APP_URL', 'SHOP_NAME', 'LINE_OA_NAME', 'EMP_ID_PREFIX', 'COMPANY_NAME']]
   ];
   const SYM = { OK: '✓', LATE: 'สาย', ABS: '✗', VAC: 'พ', PER: 'ก', SICK: 'ป', COMP: 'ช', OFFW: '★', OFF: '–', WAIT: '·', FUT: '', NA: '' };
 
@@ -410,7 +419,7 @@
       <td style="white-space:nowrap"><button class="btn sm ok" onclick="setLine('${e.id}','ใช้งาน')">อนุมัติ</button> <button class="btn sm bad" onclick="unbind('${e.id}')">ปฏิเสธ</button></td></tr>`).join('') + '</table>' : '<p class="muted">ไม่มีรายการ</p>';
     if (!$('attFrom').value) { $('attFrom').value = addDays(D.today, -6); $('attTo').value = D.today; }
     // employees
-    $('empBody').innerHTML = D.employees.map(e => `<tr><td>${esc(e.id)}</td><td>${esc(e.name)}${e.nick ? '<div class="muted">' + esc(e.nick) + '</div>' : ''}</td><td>${esc(e.position)}</td>
+    $('empBody').innerHTML = D.employees.map(e => `<tr><td>${esc(e.id)}</td><td>${esc(e.name)}${e.nick ? '<div class="muted">' + esc(e.nick) + '</div>' : ''}${e.phone ? '<div class="muted">📞 <a href="tel:' + esc(e.phone) + '">' + esc(e.phone) + '</a></div>' : ''}${e.email ? '<div class="muted">✉️ <a href="mailto:' + esc(e.email) + '">' + esc(e.email) + '</a></div>' : ''}${e.acct ? '<div class="muted">🏦 ' + esc(e.bank) + ' ' + esc(e.acct) + '</div>' : ''}</td><td>${esc(e.position)}</td>
       <td>${thDate(e.start)}</td><td>${thDate(e.probEnd)}</td><td>${pill(e.status)}${e.resign ? '<div class="muted">ออก ' + thDate(e.resign) + '</div>' : ''}</td><td>${fmt(e.salary)}</td>
       <td>${e.bal.VAC.left}/${e.bal.VAC.quota}</td><td>${e.bal.PER.left}/${e.bal.PER.quota}</td><td>${e.bal.SICK.left}/${e.bal.SICK.quota}</td><td>${e.bal.COMP.left}</td>
       <td>${lineCell(e)}</td>
@@ -489,16 +498,16 @@
 
   // ---------- employees ----------
   function probPreview() { const s = $('eStart').value; const p = +(DATA.settings.PROBATION_DAYS.value || 120); $('eProb').value = s ? thDate(addDays(s, p)) + ' (+' + p + ' วัน)' : ''; }
-  function clearEmp() { ['eId', 'eCode', 'eName', 'eNick', 'ePos', 'eStart', 'eResign', 'eSal', 'eQV', 'eQP', 'eQS', 'eNote', 'eProb'].forEach(id => $(id).value = ''); $('eSso').value = '1'; $('empFormTitle').textContent = 'เพิ่มพนักงาน'; }
+  function clearEmp() { ['eId', 'eCode', 'eName', 'eNick', 'ePos', 'ePhone', 'eEmail', 'eBank', 'eAcct', 'eStart', 'eResign', 'eSal', 'eQV', 'eQP', 'eQS', 'eNote', 'eProb'].forEach(id => $(id).value = ''); $('eSso').value = '0'; $('empFormTitle').textContent = 'เพิ่มพนักงาน'; }
   function editEmp(id) {
     const e = DATA.employees.find(x => x.id === id); if (!e) return;
-    $('eId').value = e.id; $('eName').value = e.name; $('eNick').value = e.nick; $('ePos').value = e.position; $('eStart').value = e.start; $('eResign').value = e.resign;
+    $('eId').value = e.id; $('eName').value = e.name; $('eNick').value = e.nick; $('ePos').value = e.position; $('ePhone').value = e.phone || ''; $('eEmail').value = e.email || ''; $('eBank').value = e.bank || ''; $('eAcct').value = e.acct || ''; $('eStart').value = e.start; $('eResign').value = e.resign;
     $('eSal').value = e.salary; $('eSso').value = e.sso ? '1' : '0'; $('eCode').value = e.id; $('eQV').value = e.qVac; $('eQP').value = e.qPer; $('eQS').value = e.qSick; $('eNote').value = e.note;
     $('empFormTitle').textContent = 'แก้ไข ' + e.id + ' — ' + e.name; probPreview(); window.scrollTo(0, 0);
   }
   async function saveEmp() {
     const emp = { id: $('eId').value, name: $('eName').value, nick: $('eNick').value, position: $('ePos').value, start: $('eStart').value, resign: $('eResign').value,
-      salary: $('eSal').value, sso: $('eSso').value === '1', qVac: $('eQV').value, qPer: $('eQP').value, qSick: $('eQS').value, note: $('eNote').value };
+      salary: $('eSal').value, sso: $('eSso').value === '1', qVac: $('eQV').value, qPer: $('eQP').value, qSick: $('eQS').value, note: $('eNote').value, phone: $('ePhone').value, email: $('eEmail').value, bank: $('eBank').value, acct: $('eAcct').value };
     await act('กำลังบันทึก…', async () => { const r = await run('adminSaveEmployee', TOK, emp); toast('บันทึกแล้ว — แจ้งรหัส ' + r.id + ' ให้พนักงานใช้ลงทะเบียนใน LINE', 'ok'); clearEmp(); await reload(); });
   }
   async function delEmp(id) {
