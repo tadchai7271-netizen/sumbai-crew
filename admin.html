@@ -213,6 +213,7 @@
         <input type="hidden" id="eId">
         <div class="row">
           <div><label>ชื่อ-นามสกุล *</label><input id="eName"></div>
+          <div><label>ชื่อ-นามสกุล ภาษาอังกฤษ</label><input id="eNameEn" placeholder="เช่น Korakot Lekhasuwan (ใช้ในหนังสือรับรอง EN)"></div>
           <div><label>ชื่อเล่น</label><input id="eNick"></div>
           <div><label>ตำแหน่ง</label><input id="ePos"></div>
         </div>
@@ -359,7 +360,8 @@
     ['ทดลองงาน & วันลา', ['PROBATION_DAYS', 'QUOTA_VACATION', 'QUOTA_PERSONAL', 'QUOTA_SICK', 'LEAVE_APPROVAL_OVER_DAYS', 'SICK_BACKDATE_DAYS', 'COMP_EXPIRE_DAYS', 'COMP_FOR_HOLIDAY_ON_OFFDAY']],
     ['การแจ้งเตือน LINE & PDPA', ['PUSH_EMPLOYEE_UPDATES', 'PUSH_ADMIN_ALERTS', 'PUSH_DAILY_SUMMARY', 'PDPA_VERSION', 'PDPA_EFFECTIVE_DATE', 'PDPA_CONTACT_EMAIL', 'PDPA_CONTACT_PHONE', 'ADMIN_PASSCODE']],
     ['เงินเดือน', ['WORK_HOURS_PER_DAY', 'PAY_DAYS_DIVISOR', 'OT_RATE', 'OT_HOLIDAY_RATE', 'OFFDAY_WORK_RATE', 'ABSENT_DEDUCT', 'LATE_DEDUCT_MODE', 'ATTENDANCE_BONUS', 'ATTENDANCE_BONUS_MAX_LATE', 'SSO_RATE_PCT', 'SSO_WAGE_MIN', 'SSO_WAGE_MAX']],
-    ['ลิงก์ระบบ & ข้อมูลร้าน', ['SITE_URL', 'LIFF_ID', 'WEB_APP_URL', 'SHOP_NAME', 'LINE_OA_NAME', 'EMP_ID_PREFIX', 'COMPANY_NAME']]
+    ['ข้อมูลบริษัท & ผู้ลงนามเอกสาร', ['COMPANY_NAME', 'COMPANY_NAME_EN', 'COMPANY_TAX_ID', 'COMPANY_ADDRESS', 'COMPANY_ADDRESS_EN', 'SIGNER_NAME', 'SIGNER_NAME_EN', 'SIGNER_TITLE', 'SIGNER_TITLE_EN', 'SIGNATURE_FILE_ID', 'HR_CONTACT']],
+    ['ลิงก์ระบบ & ข้อมูลร้าน', ['SITE_URL', 'LIFF_ID', 'WEB_APP_URL', 'SHOP_NAME', 'LINE_OA_NAME', 'EMP_ID_PREFIX']]
   ];
   const SYM = { OK: '✓', LATE: 'สาย', ABS: '✗', VAC: 'พ', PER: 'ก', SICK: 'ป', COMP: 'ช', OFFW: '★', OFF: '–', WAIT: '·', FUT: '', NA: '' };
 
@@ -441,7 +443,7 @@
     $('docReq').innerHTML = dr.length ? '<div class="tscroll"><table><tr><th>ขอเมื่อ</th><th>พนักงาน</th><th>เอกสาร</th><th>ใช้เพื่อ</th><th>สถานะ</th><th></th></tr>' + dr.map(d =>
       `<tr><td class="muted">${esc(d.ts.replace('T', ' ').slice(0, 16))}</td><td>${esc(d.name)}</td><td>${esc(d.typeLabel)}${d.month ? ' ' + esc(d.month) : ''}</td><td>${esc(d.purpose)}</td>
       <td>${pill(d.status)}${d.link ? ` <a href="${esc(d.link)}" target="_blank">ลิงก์</a>` : ''}${d.adminNote ? '<div class="muted">' + esc(d.adminNote) + '</div>' : ''}</td>
-      <td style="white-space:nowrap">${d.status === 'รอดำเนินการ' ? (d.typeLabel === 'สลิปเงินเดือน' ? `<button class="btn sm ok" onclick="slipDoc('${d.id}')">สร้างสลิป & ส่ง</button> ` : '')
+      <td style="white-space:nowrap">${d.status === 'รอดำเนินการ' ? (d.typeLabel === 'สลิปเงินเดือน' ? `<button class="btn sm ok" onclick="slipDoc('${d.id}')">สร้างสลิป & ส่ง</button> ` : /รับรอง/.test(d.typeLabel) ? `<button class="btn sm ok" onclick="certDoc('${d.id}')">อนุมัติ & สร้างเอกสาร</button> ` : '')
         + `<button class="btn sm" onclick="doneDoc('${d.id}')">แนบลิงก์ / เสร็จ</button> <button class="btn sm bad" onclick="rejectDoc('${d.id}')">ไม่อนุมัติ</button>` : ''}</td></tr>`).join('') + '</table></div>' : '<p class="muted">ยังไม่มีคำขอ</p>';
     ['mDate', 'aFrom', 'aTo'].forEach(id => { if (!$(id).value) $(id).value = D.today; });
     if (!$('repMonth').value) $('repMonth').value = D.today.slice(0, 7);
@@ -498,15 +500,15 @@
 
   // ---------- employees ----------
   function probPreview() { const s = $('eStart').value; const p = +(DATA.settings.PROBATION_DAYS.value || 120); $('eProb').value = s ? thDate(addDays(s, p)) + ' (+' + p + ' วัน)' : ''; }
-  function clearEmp() { ['eId', 'eCode', 'eName', 'eNick', 'ePos', 'ePhone', 'eEmail', 'eBank', 'eAcct', 'eStart', 'eResign', 'eSal', 'eQV', 'eQP', 'eQS', 'eNote', 'eProb'].forEach(id => $(id).value = ''); $('eSso').value = '0'; $('empFormTitle').textContent = 'เพิ่มพนักงาน'; }
+  function clearEmp() { ['eId', 'eCode', 'eName', 'eNameEn', 'eNick', 'ePos', 'ePhone', 'eEmail', 'eBank', 'eAcct', 'eStart', 'eResign', 'eSal', 'eQV', 'eQP', 'eQS', 'eNote', 'eProb'].forEach(id => $(id).value = ''); $('eSso').value = '0'; $('empFormTitle').textContent = 'เพิ่มพนักงาน'; }
   function editEmp(id) {
     const e = DATA.employees.find(x => x.id === id); if (!e) return;
-    $('eId').value = e.id; $('eName').value = e.name; $('eNick').value = e.nick; $('ePos').value = e.position; $('ePhone').value = e.phone || ''; $('eEmail').value = e.email || ''; $('eBank').value = e.bank || ''; $('eAcct').value = e.acct || ''; $('eStart').value = e.start; $('eResign').value = e.resign;
+    $('eId').value = e.id; $('eName').value = e.name; $('eNameEn').value = e.nameEn || ''; $('eNick').value = e.nick; $('ePos').value = e.position; $('ePhone').value = e.phone || ''; $('eEmail').value = e.email || ''; $('eBank').value = e.bank || ''; $('eAcct').value = e.acct || ''; $('eStart').value = e.start; $('eResign').value = e.resign;
     $('eSal').value = e.salary; $('eSso').value = e.sso ? '1' : '0'; $('eCode').value = e.id; $('eQV').value = e.qVac; $('eQP').value = e.qPer; $('eQS').value = e.qSick; $('eNote').value = e.note;
     $('empFormTitle').textContent = 'แก้ไข ' + e.id + ' — ' + e.name; probPreview(); window.scrollTo(0, 0);
   }
   async function saveEmp() {
-    const emp = { id: $('eId').value, name: $('eName').value, nick: $('eNick').value, position: $('ePos').value, start: $('eStart').value, resign: $('eResign').value,
+    const emp = { id: $('eId').value, name: $('eName').value, nameEn: $('eNameEn').value, nick: $('eNick').value, position: $('ePos').value, start: $('eStart').value, resign: $('eResign').value,
       salary: $('eSal').value, sso: $('eSso').value === '1', qVac: $('eQV').value, qPer: $('eQP').value, qSick: $('eQS').value, note: $('eNote').value, phone: $('ePhone').value, email: $('eEmail').value, bank: $('eBank').value, acct: $('eAcct').value };
     await act('กำลังบันทึก…', async () => { const r = await run('adminSaveEmployee', TOK, emp); toast('บันทึกแล้ว — แจ้งรหัส ' + r.id + ' ให้พนักงานใช้ลงทะเบียนใน LINE', 'ok'); clearEmp(); await reload(); });
   }
@@ -523,6 +525,10 @@
     await act('กำลังบันทึก…', async () => { await run('adminDecideLeave', TOK, id, ok, note || ''); toast('บันทึกแล้ว', 'ok'); await reload(); });
   }
   async function slipDoc(id) { await act('กำลังสร้างสลิป PDF…', async () => { await run('adminFulfillPayslip', TOK, id); toast('สร้างสลิปและแนบให้พนักงานแล้ว', 'ok'); await reload(); }); }
+  async function certDoc(id) {
+    if (!confirm('ออกหนังสือรับรอง (ไทย + English) จากข้อมูลพนักงานปัจจุบัน แล้วส่งให้พนักงานทาง LINE?\nตรวจชื่อภาษาอังกฤษ ตำแหน่ง วันเริ่มงาน และเงินเดือนในหน้าพนักงานก่อน')) return;
+    await act('กำลังสร้างหนังสือรับรอง PDF…', async () => { const r = await run('adminFulfillDoc', TOK, id); toast('สร้างเอกสารและส่งให้พนักงานแล้ว', 'ok'); await reload(); });
+  }
   async function doneDoc(id) {
     const link = prompt('ลิงก์เอกสาร (Google Drive) — เว้นว่างได้ถ้าให้เป็นกระดาษ'); if (link === null) return;
     const note = prompt('หมายเหตุถึงพนักงาน (เช่น รับได้ที่เคาน์เตอร์วันพุธ)') || '';
